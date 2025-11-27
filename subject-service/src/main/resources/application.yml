@@ -2,6 +2,8 @@ server:
   port: ${SUBJECT_SERVICE_PORT:8082}
 
 spring:
+  profiles:
+    active: dev
   application:
     name: subject-service
   datasource:
@@ -19,6 +21,7 @@ spring:
 
 eureka:
   client:
+    enabled: false
     service-url:
       defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
 
