@@ -15,11 +15,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,7 +30,7 @@ public class SubjectController {
     private final TopicService topicService;
 
     @GetMapping
-    // @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    // @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'INSTRUCTOR', 'SYSTEM')")
     @Operation(summary = "Get all subjects", description = "Retrieves a list of all subjects.")
     public ResponseEntity<ApiResponse<PageResponse<SubjectDto>>> getSubjects(
             @RequestParam(defaultValue = "0") int page,
@@ -51,7 +46,7 @@ public class SubjectController {
     }
 
     @GetMapping("/{subjectId}")
-    // @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    // @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'INSTRUCTOR', 'SYSTEM')")
     @Operation(summary = "Get a subject by ID", description = "Retrieves a subject by its ID.")
     public ResponseEntity<ApiResponse<SubjectDto>> getSubjectById(@PathVariable Long subjectId) {
 
