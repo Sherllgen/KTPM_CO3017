@@ -1,6 +1,7 @@
 package com.example.subject.controller;
 
 import com.example.subject.dto.request.TopicCreateRequest;
+import com.example.subject.dto.request.TopicUpdateRequest;
 import com.example.subject.dto.response.TopicDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +24,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/subject")
+@RequestMapping("/api/admin/subjects")
 @Slf4j
 @Tag(name = "Subject Admin Controller", description = "APIs for managing subjects by admin")
 // @SecurityRequirement(name = "bearerAuth")
@@ -87,16 +88,29 @@ public class SubjectAdminController {
                 .build());
     }
 
-    @GetMapping("/{subjectId}/topics")
+    @PutMapping("/topics/{topicId}")
 //    @PreAuthorize("hasAnyRole('ADMIN', 'INSTRUCTOR')")
-    @Operation(summary = "Get topics for a subject", description = "Retrieves topics associated with a specific subject.")
-    public ResponseEntity<ApiResponse<java.util.List<TopicDto>>> getTopicsForSubject(
-            @PathVariable Long subjectId) {
-        List<TopicDto> result = topicService.getTopicsBySubjectId(subjectId);
-        return ResponseEntity.ok(ApiResponse.<List<TopicDto>>builder()
+    @Operation(summary = "Update a topic", description = "Updates a specific topic by its id.")
+    public ResponseEntity<ApiResponse<TopicDto>> updateTopic(
+            @PathVariable Long topicId,
+            @RequestBody TopicUpdateRequest request) {
+        TopicDto result = topicService.updateTopic(topicId, request);
+        return ResponseEntity.ok(ApiResponse.<TopicDto>builder()
                 .status(200)
                 .data(result)
-                .message("Topics retrieved for subject successfully")
+                .message("Topic updated successfully")
+                .build());
+    }
+
+    @DeleteMapping("/topics/{topicId}")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'INSTRUCTOR')")
+    @Operation(summary = "Delete a topic", description = "Deletes a specific topic by its id.")
+    public ResponseEntity<ApiResponse<Void>> deleteTopic(
+            @PathVariable Long topicId) {
+        topicService.deleteTopic(topicId);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .status(200)
+                .message("Topic deleted successfully")
                 .build());
     }
 }

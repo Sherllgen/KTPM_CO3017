@@ -16,6 +16,7 @@ import com.example.subject.model.Topic;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -80,6 +81,7 @@ public class TopicServiceImpl implements TopicService {
     public List<TopicDto> getTopicsBySubjectId(Long subjectId) {
         List<Topic> topics = topicRepository.findBySubject_SubjectId(subjectId);
         return topics.stream()
+                .sorted(Comparator.comparing(Topic::getOrderIndex))
                 .map(topicMapper::toDto)
                 .collect(Collectors.toList());
     }
