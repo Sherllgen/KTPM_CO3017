@@ -1,8 +1,10 @@
 package com.example.subject.controller;
 
+import com.example.subject.dto.request.TopicCreateRequest;
+import com.example.subject.dto.response.TopicDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.subject.config.ApiResponse;
 import com.example.subject.dto.request.SubjectCreateRequest;
@@ -17,12 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -38,7 +35,7 @@ public class SubjectAdminController {
     @PostMapping
     @Operation(summary = "Create a new subject", description = "Creates a new subject with the provided details.")
     public ResponseEntity<ApiResponse<SubjectDto>> createSubject(@RequestBody SubjectCreateRequest request) {
-        
+
         SubjectDto result = subjectService.createSubject(request);
 
         return ResponseEntity.ok(ApiResponse.<SubjectDto>builder()
@@ -75,4 +72,31 @@ public class SubjectAdminController {
                 .build());
     }
 
+    //    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{subjectId}/topics")
+    @Operation(summary = "Create topics for a subject", description = "Creates topics associated with a specific subject.")
+    public ResponseEntity<ApiResponse<TopicDto>> createTopicsForSubject(
+            @PathVariable Long subjectId,
+            @RequestBody TopicCreateRequest request) {
+        TopicDto result = topicService.createTopic(subjectId, request);
+
+        return ResponseEntity.ok(ApiResponse.<TopicDto>builder()
+                .status(201)
+                .data(result)
+                .message("Topics created for subject successfully")
+                .build());
+    }
+
+    @GetMapping("/{subjectId}/topics")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'INSTRUCTOR')")
+    @Operation(summary = "Get topics for a subject", description = "Retrieves topics associated with a specific subject.")
+    public ResponseEntity<ApiResponse<java.util.List<TopicDto>>> getTopicsForSubject(
+            @PathVariable Long subjectId) {
+        List<TopicDto> result = topicService.getTopicsBySubjectId(subjectId);
+        return ResponseEntity.ok(ApiResponse.<List<TopicDto>>builder()
+                .status(200)
+                .data(result)
+                .message("Topics retrieved for subject successfully")
+                .build());
+    }
 }

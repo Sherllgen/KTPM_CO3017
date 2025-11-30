@@ -13,7 +13,8 @@ public enum ErrorCode {
     SUBJECT_CODE_EXISTED(1003, HttpStatus.CONFLICT, "Subject code already exists"),
     SUBJECT_NOT_FOUND(1002, HttpStatus.NOT_FOUND, "Subject not found"),
     //=========== Topic Errors ============
-    TOPIC_NOT_FOUND(2001, HttpStatus.NOT_FOUND, "Topic not found");
+    TOPIC_NOT_FOUND(2001, HttpStatus.NOT_FOUND, "Topic not found"),
+    TOPIC_ALREADY_EXISTS(2002, HttpStatus.CONFLICT, "Topic already exists");
 
     private final Integer code;
     private final HttpStatus status;
