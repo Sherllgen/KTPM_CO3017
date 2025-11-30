@@ -7,6 +7,8 @@ import com.example.subject.model.Topic;
 import com.example.subject.model.enums.SubjectStatus;
 import com.example.subject.repository.SubjectRepository;
 import com.example.subject.repository.TopicRepository;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -22,6 +24,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         long count = subjectRepository.count();
         System.out.println("Subject count in DB = " + count);

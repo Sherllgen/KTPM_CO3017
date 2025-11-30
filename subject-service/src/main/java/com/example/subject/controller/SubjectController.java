@@ -1,5 +1,6 @@
 package com.example.subject.controller;
 
+import com.example.subject.dto.response.TopicDto;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,6 +20,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/subject")
@@ -58,6 +61,19 @@ public class SubjectController {
                 .message("Subject retrieved successfully")
                 .build());
 
+    }
+
+    @GetMapping("/{subjectId}/topics")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'INSTRUCTOR')")
+    @Operation(summary = "Get topics for a subject", description = "Retrieves topics associated with a specific subject.")
+    public ResponseEntity<ApiResponse<java.util.List<TopicDto>>> getTopicsForSubject(
+            @PathVariable Long subjectId) {
+        List<TopicDto> result = topicService.getTopicsBySubjectId(subjectId);
+        return ResponseEntity.ok(ApiResponse.<List<TopicDto>>builder()
+                .status(200)
+                .data(result)
+                .message("Topics retrieved for subject successfully")
+                .build());
     }
 
 }

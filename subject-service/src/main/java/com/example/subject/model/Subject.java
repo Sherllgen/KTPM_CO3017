@@ -40,7 +40,7 @@ public class Subject {
     private SubjectStatus status;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Topic> topics;
 
     @JsonManagedReference
