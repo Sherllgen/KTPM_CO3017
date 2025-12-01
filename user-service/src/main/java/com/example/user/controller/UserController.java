@@ -8,8 +8,10 @@ import com.example.user.dto.response.SessionDto;
 import com.example.user.dto.response.UserDto;
 import com.example.user.service.UserAccountService;
 import com.example.user.service.UserAuthService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -23,12 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
+@Tag(name = "User Authentication", description = "Các API Đăng ký, Đăng nhập, Refresh Token dành cho người dùng")
 public class UserController {
-    private final UserAuthService userAuthService;       // Cho Login/Logout/Refresh
-    private final UserAccountService userAccountService; // Cho Register
+    private final UserAuthService userAuthService;
+    private final UserAccountService userAccountService;
 
     // --- TASK 4: REGISTER ---
     @PostMapping("/register")
+    @Operation(summary = "Đăng ký tài khoản", description = "Người dùng tự đăng ký tài khoản mới (Role mặc định là STUDENT)")
     public ResponseEntity<ApiResponse<UserDto>> register(@RequestBody @Valid UserRegisterRequest request) {
         UserDto userDto = userAccountService.register(request);
         return ResponseEntity.ok(new ApiResponse<>(200, "Đăng ký thành công", userDto));
@@ -36,6 +40,7 @@ public class UserController {
 
     // --- TASK 3: LOGIN ---
     @PostMapping("/login")
+    @Operation(summary = "Đăng nhập", description = "Xác thực email/password. Trả về Access Token (Body) và Refresh Token (HttpOnly Cookie)")
     public ResponseEntity<ApiResponse<AuthTokenDto>> login(@RequestBody @Valid UserLoginRequest request) {
         AuthTokenDto result = userAuthService.login(request);
         ResponseCookie cookie = createRefreshTokenCookie(result.getRefreshToken());
@@ -46,7 +51,8 @@ public class UserController {
     }
 
     // --- TASK 3: REFRESH TOKEN (authenticateSession) ---
-    @PostMapping("/refresh") // Mapping này ứng với hàm authenticateSession trong UML
+    @PostMapping("/refresh")
+    @Operation(summary = "Làm mới Token (Refresh)", description = "Cấp lại Access Token mới dựa trên Refresh Token hợp lệ trong Cookie")
     public ResponseEntity<ApiResponse<SessionDto>> authenticateSession(HttpServletRequest request) {
         String refreshToken = getRefreshTokenFromCookie(request);
         SessionDto result = userAuthService.authenticateSession(refreshToken);
@@ -59,6 +65,7 @@ public class UserController {
 
     // --- TASK 3: LOGOUT ---
     @PostMapping("/logout")
+    @Operation(summary = "Đăng xuất", description = "Xóa Session trong DB và xóa Cookie Refresh Token ở trình duyệt")
     public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request) {
         String refreshToken = getRefreshTokenFromCookie(request);
         userAuthService.logout(refreshToken);
