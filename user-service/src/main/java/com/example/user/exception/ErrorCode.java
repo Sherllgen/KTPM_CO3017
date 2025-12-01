@@ -7,7 +7,8 @@ public enum ErrorCode {
     INVALID_REQUEST(400, HttpStatus.BAD_REQUEST, "Invalid request"),
     UNAUTHORIZED(401, HttpStatus.UNAUTHORIZED, "Unauthorized"),
     FORBIDDEN(403, HttpStatus.FORBIDDEN, "Access denied"),
-    NOT_FOUND(404, HttpStatus.NOT_FOUND, "Resource not found");
+    NOT_FOUND(404, HttpStatus.NOT_FOUND, "Resource not found"),
+    USER_NOT_EXIST(404, HttpStatus.NOT_FOUND, "User not found");
 
     private final Integer code;
     private final HttpStatus status;
