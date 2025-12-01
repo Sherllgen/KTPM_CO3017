@@ -8,10 +8,20 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Component
 public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config> {
 
     private final JwtTokenProvider jwtTokenProvider;
+
+    // Định nghĩa danh sách API không cần check token ngay tại đây
+    private final List<String> openApiEndpoints = List.of(
+            "/users/register",
+            "/users/login",
+            "/users/refresh",
+            "/eureka"
+    );
 
     public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
         super(Config.class);
@@ -22,6 +32,13 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
+            // 1. Nếu request thuộc danh sách Public -> Cho qua luôn
+            String path = exchange.getRequest().getURI().getPath();
+            if (openApiEndpoints.stream().anyMatch(path::contains)) {
+                return chain.filter(exchange);
+            }
+
+            // 2. Kiểm tra Header
             if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
                 return onError(exchange, "No Authorization header", HttpStatus.UNAUTHORIZED);
             }
@@ -31,11 +48,13 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                 return onError(exchange, "Invalid Authorization header", HttpStatus.UNAUTHORIZED);
             }
 
+            // 3. Validate Token
             String token = authHeader.substring(7);
             if (!jwtTokenProvider.validateToken(token)) {
                 return onError(exchange, "Invalid JWT token", HttpStatus.UNAUTHORIZED);
             }
 
+            // 4. Token ngon -> Cho qua
             return chain.filter(exchange);
         };
     }
