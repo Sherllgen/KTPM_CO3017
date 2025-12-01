@@ -3,6 +3,8 @@ package com.example.user.config.jwt;
 import java.util.Collection;
 import java.util.List;
 
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -11,13 +13,15 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
+@Builder
+@NoArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
-    private final String id;
-    private final String email;
-    private final String password;
-    private final boolean enabled;
-    private final List<String> roles;
+    private String id;
+    private String email;
+    private String password;
+    private boolean enabled;
+    private List<String> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -30,6 +34,9 @@ public class CustomUserDetails implements UserDetails {
     public String getUsername() {
         return email;
     }
+
+    @Override
+    public String getPassword() {return password;}
 
     @Override
     public boolean isAccountNonExpired() {
