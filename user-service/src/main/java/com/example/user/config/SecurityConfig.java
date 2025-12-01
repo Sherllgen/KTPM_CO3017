@@ -42,7 +42,9 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/public/**", "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**")
+                        .requestMatchers("/users/**").permitAll()
+                        .requestMatchers("/admin/**").authenticated()
+                        .requestMatchers("/actuator/**", "/v3/api-docs/**", "/swagger-ui/**")
                         .permitAll()
                         .anyRequest().authenticated());
 

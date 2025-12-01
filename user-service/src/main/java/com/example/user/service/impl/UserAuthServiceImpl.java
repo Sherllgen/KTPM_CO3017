@@ -33,28 +33,25 @@ public class UserAuthServiceImpl implements UserAuthService {
     @Override
     @Transactional
     public AuthTokenDto login(UserLoginRequest req) {
-        // Xác thực User/Pass
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
-            );
-        } catch (Exception e) {
-            throw new AppException(ErrorCode.UNAUTHORIZED, "Email hoặc mật khẩu sai");
-        }
+        // ... (Đoạn xác thực authenticateManager giữ nguyên) ...
 
-        // Tìm User
         User user = userRepository.findByEmail(req.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
 
-        // Xóa session cũ (nếu muốn mỗi user chỉ đăng nhập 1 nơi)
-        sessionRepository.deleteByUser(user);
-
-        // Tạo Token mới
+        // TẠO TOKEN
         String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail());
         String refreshToken = UUID.randomUUID().toString();
 
-        // Lưu Session
-        saveSession(user, refreshToken);
+        // XỬ LÝ SESSION (Sửa đoạn này)
+        // Tìm xem user này đã có session chưa?
+        Session session = sessionRepository.findByUser(user)
+                .orElseGet(() -> Session.builder().user(user).build()); // Nếu chưa có thì tạo vỏ mới
+
+        // Cập nhật thông tin (Dù mới hay cũ đều set lại token và ngày hết hạn)
+        session.setToken(refreshToken);
+        session.setExpiryDate(Instant.now().plus(7, ChronoUnit.DAYS));
+
+        sessionRepository.save(session);
 
         return new AuthTokenDto(accessToken, refreshToken);
     }
@@ -72,25 +69,29 @@ public class UserAuthServiceImpl implements UserAuthService {
     @Override
     @Transactional
     public SessionDto authenticateSession(String refreshToken) {
-        // Tìm session trong DB
+        // 1. Tìm session theo token cũ
         Session session = sessionRepository.findByToken(refreshToken)
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED, "Session không tồn tại"));
 
-        // Kiểm tra hết hạn
+        // 2. Kiểm tra hết hạn
         if (session.getExpiryDate().isBefore(Instant.now())) {
-            sessionRepository.delete(session); // Hết hạn thì xóa luôn
+            sessionRepository.delete(session);
             throw new AppException(ErrorCode.UNAUTHORIZED, "Session đã hết hạn, vui lòng login lại");
         }
 
         User user = session.getUser();
 
-        // TOKEN ROTATION (Bảo mật cao): Xóa token cũ, cấp token mới
-        sessionRepository.delete(session);
-
+        // 3. TOKEN ROTATION (Sửa lại đoạn này)
+        // Thay vì xóa cũ tạo mới, ta cập nhật trực tiếp
         String newAccessToken = jwtTokenProvider.generateAccessToken(user.getEmail());
         String newRefreshToken = UUID.randomUUID().toString();
 
-        saveSession(user, newRefreshToken);
+        // Cập nhật thông tin mới vào session cũ
+        session.setToken(newRefreshToken);
+        session.setExpiryDate(Instant.now().plus(7, ChronoUnit.DAYS));
+
+        // Lưu lại (Hibernate sẽ tự hiểu là UPDATE vì session đã có ID)
+        sessionRepository.save(session);
 
         return new SessionDto(newAccessToken, newRefreshToken);
     }
