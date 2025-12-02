@@ -5,6 +5,7 @@ import com.example.user.dto.request.UserRegisterRequest;
 import com.example.user.dto.response.UserDto;
 import com.example.user.exception.AppException;
 import com.example.user.exception.ErrorCode;
+import com.example.user.mapper.UserMapper;
 import com.example.user.model.Role;
 import com.example.user.model.User;
 import com.example.user.model.enums.UserStatus;
@@ -18,14 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserAccountServiceImpl implements UserAccountService {
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository; // Inject cái này để tìm Role
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     // --- 1. ĐĂNG KÝ (User tự đăng ký -> Mặc định là STUDENT) ---
     @Override
@@ -50,7 +51,7 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .build();
 
         userRepository.save(user);
-        return mapToUserDto(user);
+        return userMapper.toDto(user);
     }
 
     // --- 2. TẠO USER (Admin tạo -> Cho chọn Role) ---
@@ -83,7 +84,7 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .build();
 
         userRepository.save(user);
-        return mapToUserDto(user);
+        return userMapper.toDto(user);
     }
 
     // --- 3. KHÓA TÀI KHOẢN ---
@@ -91,7 +92,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional
     public void toggleUserStatus(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));    
 
         if (user.getStatus() == UserStatus.ACTIVE) {
             user.setStatus(UserStatus.INACTIVE);
@@ -101,14 +102,4 @@ public class UserAccountServiceImpl implements UserAccountService {
         userRepository.save(user);
     }
 
-    // Helper map data
-    private UserDto mapToUserDto(User user) {
-        return UserDto.builder()
-                .id(user.getUserId()) // Chú ý: Entity của bạn dùng 'userId' hay 'id'? Check lại file User.java
-                .email(user.getEmail())
-                .fullName(user.getFullName())
-                .status(user.getStatus().name())
-                .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
-                .build();
-    }
 }

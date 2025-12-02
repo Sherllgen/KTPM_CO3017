@@ -28,7 +28,6 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    // TODO: complete this method
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {

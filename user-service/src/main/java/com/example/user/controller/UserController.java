@@ -1,23 +1,19 @@
 package com.example.user.controller;
 
 import com.example.user.config.ApiResponse;
-import com.example.user.dto.request.UserLoginRequest;
-import com.example.user.dto.request.UserRegisterRequest;
-import com.example.user.dto.response.AuthTokenDto;
-import com.example.user.dto.response.SessionDto;
+import com.example.user.dto.request.UserProfileUpdateRequest;
 import com.example.user.dto.response.UserDto;
-import com.example.user.service.UserAccountService;
-import com.example.user.service.UserAuthService;
+import com.example.user.service.UserProfileService;
+
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
+
+import com.example.user.config.jwt.SecurityUtil;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,81 +21,29 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
-@Tag(name = "User Authentication", description = "Các API Đăng ký, Đăng nhập, Refresh Token dành cho người dùng")
+@Tag(name = "User Profile Management", description = "Các API Quản lý thông tin người dùng")
 public class UserController {
-    private final UserAuthService userAuthService;
-    private final UserAccountService userAccountService;
+    private final UserProfileService userProfileService;
 
-    // --- TASK 4: REGISTER ---
-    @PostMapping("/register")
-    @Operation(summary = "Đăng ký tài khoản", description = "Người dùng tự đăng ký tài khoản mới (Role mặc định là STUDENT)")
-    public ResponseEntity<ApiResponse<UserDto>> register(@RequestBody @Valid UserRegisterRequest request) {
-        UserDto userDto = userAccountService.register(request);
-        return ResponseEntity.ok(new ApiResponse<>(200, "Đăng ký thành công", userDto));
+    // --- GET USER PROFILE ---
+    @GetMapping("/me")
+    @Operation(summary = "Lấy thông tin", description = "Người dùng lấy thông tin của bản thân")
+    public ResponseEntity<ApiResponse<UserDto>> getProfile() {
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+
+        UserDto user = userProfileService.getProfile(currentUserId); 
+        return ResponseEntity.ok(new ApiResponse<>(200, "Lấy thông tin người dùng thành công", user));
     }
 
-    // --- TASK 3: LOGIN ---
-    @PostMapping("/login")
-    @Operation(summary = "Đăng nhập", description = "Xác thực email/password. Trả về Access Token (Body) và Refresh Token (HttpOnly Cookie)")
-    public ResponseEntity<ApiResponse<AuthTokenDto>> login(@RequestBody @Valid UserLoginRequest request) {
-        AuthTokenDto result = userAuthService.login(request);
-        ResponseCookie cookie = createRefreshTokenCookie(result.getRefreshToken());
+    // --- UPDATE USER PROFILE ---
+    @PutMapping("/me")
+    @Operation(summary = "Cập nhật thông tin người dùng", description = "Cập nhật thông tin người dùng")
+    public ResponseEntity<ApiResponse<UserDto>> updateUser(@RequestBody @Valid UserProfileUpdateRequest request) {
+        Long currentUserId = SecurityUtil.getCurrentUserId();
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new ApiResponse<>(200, "Login thành công", result));
+        UserDto user = userProfileService.updateUser(currentUserId, request);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Cập nhật thông tin người dùng thành công", user));
     }
 
-    // --- TASK 3: REFRESH TOKEN (authenticateSession) ---
-    @PostMapping("/refresh")
-    @Operation(summary = "Làm mới Token (Refresh)", description = "Cấp lại Access Token mới dựa trên Refresh Token hợp lệ trong Cookie")
-    public ResponseEntity<ApiResponse<SessionDto>> authenticateSession(HttpServletRequest request) {
-        String refreshToken = getRefreshTokenFromCookie(request);
-        SessionDto result = userAuthService.authenticateSession(refreshToken);
-        ResponseCookie cookie = createRefreshTokenCookie(result.getRefreshToken());
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new ApiResponse<>(200, "Refresh thành công", result));
-    }
-
-    // --- TASK 3: LOGOUT ---
-    @PostMapping("/logout")
-    @Operation(summary = "Đăng xuất", description = "Xóa Session trong DB và xóa Cookie Refresh Token ở trình duyệt")
-    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request) {
-        String refreshToken = getRefreshTokenFromCookie(request);
-        userAuthService.logout(refreshToken);
-
-        ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
-                .httpOnly(true)
-                .path("/")
-                .maxAge(0)
-                .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new ApiResponse<>(200, "Logout thành công", null));
-    }
-
-    // --- Helper Methods ---
-    private ResponseCookie createRefreshTokenCookie(String token) {
-        return ResponseCookie.from("refresh_token", token)
-                .httpOnly(true)
-                .secure(false) // Deploy để true
-                .path("/")
-                .maxAge(7 * 24 * 60 * 60)
-                .sameSite("Lax")
-                .build();
-    }
-
-    private String getRefreshTokenFromCookie(HttpServletRequest request) {
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if ("refresh_token".equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        throw new RuntimeException("Refresh Token không tìm thấy trong Cookie");
-    }
 }

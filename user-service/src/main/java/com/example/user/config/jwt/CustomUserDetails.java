@@ -1,7 +1,7 @@
 package com.example.user.config.jwt;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -17,11 +17,11 @@ import lombok.Getter;
 @NoArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
-    private String id;
+    private Long id;
     private String email;
     private String password;
     private boolean enabled;
-    private List<String> roles;
+    private Set<String> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

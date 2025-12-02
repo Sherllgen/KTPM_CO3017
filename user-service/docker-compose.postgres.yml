@@ -1,7 +1,7 @@
 services:
-  postgres-subject:
+  postgres-user:
     image: postgres:17-alpine
-    container_name: postgres-subject
+    container_name: postgres-user
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USERNAME}
@@ -9,9 +9,9 @@ services:
     ports:
       - "${POSTGRES_PORT:-5433}:5432"
     volumes:
-      - postgres_subject_data:/var/lib/postgresql/data
+      - postgres_user_data:/var/lib/postgresql/data
     networks:
-      - subject-network
+      - user-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
       interval: 10s
@@ -19,8 +19,8 @@ services:
       retries: 5
 
 networks:
-  subject-network:
+  user-network:
     driver: bridge
 
 volumes:
-  postgres_subject_data:
+  postgres_user_data:
