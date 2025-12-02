@@ -34,6 +34,8 @@ public class User {
 
     private String fullName;
 
+    private String verificationCode;
+
     @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

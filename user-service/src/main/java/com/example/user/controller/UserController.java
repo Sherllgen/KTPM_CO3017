@@ -17,10 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
@@ -79,6 +76,13 @@ public class UserController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(new ApiResponse<>(200, "Logout thành công", null));
+    }
+
+    @PostMapping("/verify")
+    @Operation(summary = "Xác thực email", description = "Nhập email và mã code 6 số nhận được để kích hoạt tài khoản")
+    public ResponseEntity<ApiResponse<Void>> verifyAccount(@RequestParam String email, @RequestParam String code) {
+        userAccountService.verifyAccount(email, code);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Kích hoạt tài khoản thành công! Bạn có thể đăng nhập.", null));
     }
 
     // --- Helper Methods ---

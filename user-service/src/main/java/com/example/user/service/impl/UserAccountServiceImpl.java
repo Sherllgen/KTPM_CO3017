@@ -10,6 +10,7 @@ import com.example.user.model.User;
 import com.example.user.model.enums.UserStatus;
 import com.example.user.repository.RoleRepository;
 import com.example.user.repository.UserRepository;
+import com.example.user.service.EmailService;
 import com.example.user.service.UserAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,8 +25,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserAccountServiceImpl implements UserAccountService {
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository; // Inject cái này để tìm Role
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     // --- 1. ĐĂNG KÝ (User tự đăng ký -> Mặc định là STUDENT) ---
     @Override
@@ -40,16 +42,23 @@ public class UserAccountServiceImpl implements UserAccountService {
         Role studentRole = roleRepository.findByName("STUDENT")
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Role STUDENT chưa được tạo trong DB"));
 
+        // Tạo mã xác thực ngẫu nhiên 6 chữ số
+        String code = String.valueOf((int) ((Math.random() * 899999) + 100000));
+
         // Tạo User
         User user = User.builder()
                 .email(req.getEmail())
                 .password(passwordEncoder.encode(req.getPassword()))
                 .fullName(req.getFullName())
-                .status(UserStatus.ACTIVE) // Enum UserStatus bạn đang dùng
+                .status(UserStatus.INACTIVE)
                 .roles(Set.of(studentRole)) // Set role vào
+                .verificationCode(code) // Lưu mã xác thực
                 .build();
 
         userRepository.save(user);
+
+        emailService.sendVerificationEmail(req.getEmail(), "Xác thực tài khoản", code);
+
         return mapToUserDto(user);
     }
 
@@ -101,10 +110,31 @@ public class UserAccountServiceImpl implements UserAccountService {
         userRepository.save(user);
     }
 
+    // --- 4. IMPLEMENT HÀM VERIFY ---
+    @Override
+    @Transactional
+    public void verifyAccount(String email, String code) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+
+        if (user.getStatus() == UserStatus.ACTIVE) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Tài khoản đã được kích hoạt rồi");
+        }
+
+        if (code == null || !code.equals(user.getVerificationCode())) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Mã xác thực không đúng");
+        }
+
+        // Kích hoạt
+        user.setStatus(UserStatus.ACTIVE);
+        user.setVerificationCode(null); // Xóa mã đi dùng 1 lần thôi
+        userRepository.save(user);
+    }
+
     // Helper map data
     private UserDto mapToUserDto(User user) {
         return UserDto.builder()
-                .id(user.getUserId()) // Chú ý: Entity của bạn dùng 'userId' hay 'id'? Check lại file User.java
+                .id(user.getUserId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .status(user.getStatus().name())
