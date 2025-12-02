@@ -58,7 +58,6 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .build();
 
         userRepository.save(user);
-        return userMapper.toDto(user);
 
         emailService.sendVerificationEmail(req.getEmail(), "Xác thực tài khoản", code);
 
@@ -118,7 +117,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional
     public void verifyAccount(String email, String code) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (user.getStatus() == UserStatus.ACTIVE) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Tài khoản đã được kích hoạt rồi");
