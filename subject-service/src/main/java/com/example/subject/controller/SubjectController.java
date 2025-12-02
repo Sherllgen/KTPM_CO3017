@@ -27,13 +27,13 @@ import java.util.List;
 @RequestMapping("/api/subject")
 @RequiredArgsConstructor
 @Slf4j
-// @SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = "bearerAuth")
 public class SubjectController {
     private final SubjectService subjectService;
     private final TopicService topicService;
 
     @GetMapping
-    // @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'INSTRUCTOR', 'SYSTEM')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'INSTRUCTOR', 'SYSTEM')")
     @Operation(summary = "Get all subjects", description = "Retrieves a list of all subjects.")
     public ResponseEntity<ApiResponse<PageResponse<SubjectDto>>> getSubjects(
             @RequestParam(defaultValue = "0") int page,
@@ -49,7 +49,7 @@ public class SubjectController {
     }
 
     @GetMapping("/{subjectId}")
-    // @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'INSTRUCTOR', 'SYSTEM')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'INSTRUCTOR', 'SYSTEM')")
     @Operation(summary = "Get a subject by ID", description = "Retrieves a subject by its ID.")
     public ResponseEntity<ApiResponse<SubjectDto>> getSubjectById(@PathVariable Long subjectId) {
 
@@ -64,7 +64,7 @@ public class SubjectController {
     }
 
     @GetMapping("/{subjectId}/topics")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'INSTRUCTOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'INSTRUCTOR')")
     @Operation(summary = "Get topics for a subject", description = "Retrieves topics associated with a specific subject.")
     public ResponseEntity<ApiResponse<java.util.List<TopicDto>>> getTopicsForSubject(
             @PathVariable Long subjectId) {

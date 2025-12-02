@@ -9,6 +9,10 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.function.Function;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -29,7 +33,23 @@ public class JwtTokenProvider {
     }
 
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractClaim(token, claims -> {
+            String username = claims.get("username", String.class);
+            return username != null ? username : claims.getSubject();
+        });
+    }
+
+    public Set<String> extractRoles(String token) {
+        return extractClaim(token, claims -> {
+            List<?> roles = claims.get("roles", List.class);
+            if (roles == null) {
+                return Collections.emptySet();
+            }
+            return roles.stream()
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .collect(Collectors.toSet());
+        });
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {

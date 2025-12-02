@@ -10,6 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Set;
 
 @Component
@@ -33,6 +34,8 @@ public class DataSeeder implements CommandLineRunner {
         // 2. KHOI TAO ADMIN USER (Để bạn test API tạo user của admin)
         if (userRepository.count() == 0) {
             Role adminRole = roleRepository.findByName("ADMIN").orElse(null);
+            Role studentRole = roleRepository.findByName("STUDENT").orElse(null);
+            Role teacherRole = roleRepository.findByName("TEACHER").orElse(null);
 
             User admin = User.builder()
                     .email("admin@gmail.com")
@@ -41,9 +44,28 @@ public class DataSeeder implements CommandLineRunner {
                     .status(UserStatus.ACTIVE)
                     .roles(Set.of(adminRole))
                     .build();
+            
+            User student = User.builder()
+                    .email("student@gmail.com")
+                    .password(passwordEncoder.encode("123456"))
+                    .fullName("Student")
+                    .status(UserStatus.ACTIVE)
+                    .roles(Set.of(studentRole))
+                    .build();
+            
+            User teacher = User.builder()
+                    .email("teacher@gmail.com")
+                    .password(passwordEncoder.encode("123456"))
+                    .fullName("Teacher")
+                    .status(UserStatus.ACTIVE)
+                    .roles(Set.of(teacherRole))
+                    .build();
 
-            userRepository.save(admin);
-            System.out.println("-----> ĐÃ TẠO USER ADMIN MẪU: admin@gmail.com / 123 <-----");
+            userRepository.saveAll(List.of(admin, student, teacher));
+            System.out.println("-----> ĐÃ TẠO USER ADMIN, STUDENT, TEACHER MẪU: \n" +
+                    "admin@gmail.com / 123456 \n" +
+                    "student@gmail.com / 123456 \n" +
+                    "teacher@gmail.com / 123456 <-----");
         }
     }
 }

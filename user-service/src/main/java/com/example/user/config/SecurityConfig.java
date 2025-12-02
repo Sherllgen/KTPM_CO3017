@@ -19,6 +19,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.example.user.config.jwt.CustomAuthenticationEntryPoint;
 import com.example.user.config.jwt.JwtAuthenticationFilter;
+import com.example.user.service.impl.CustomUserDetailsService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +34,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,14 +44,13 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(customAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/users/**").permitAll()
-                        .requestMatchers("/admin/**").authenticated()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/admin/**", "/users/**").authenticated()
                         .requestMatchers("/actuator/**", "/v3/api-docs/**", "/swagger-ui/**")
                         .permitAll()
-                        .anyRequest().authenticated());
-
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
+                        .anyRequest().authenticated())
+                .userDetailsService(customUserDetailsService)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
