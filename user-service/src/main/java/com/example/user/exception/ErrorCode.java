@@ -8,7 +8,11 @@ public enum ErrorCode {
     UNAUTHORIZED(401, HttpStatus.UNAUTHORIZED, "Unauthorized"),
     FORBIDDEN(403, HttpStatus.FORBIDDEN, "Access denied"),
     NOT_FOUND(404, HttpStatus.NOT_FOUND, "Resource not found"),
-    USER_NOT_EXIST(404, HttpStatus.NOT_FOUND, "User not found");
+    
+    // ====== USER ======
+    USER_NOT_FOUND(1001, HttpStatus.NOT_FOUND, "User not found"),
+    USER_ALREADY_EXISTS(1002, HttpStatus.CONFLICT, "User already exists"),
+    ;
 
     private final Integer code;
     private final HttpStatus status;

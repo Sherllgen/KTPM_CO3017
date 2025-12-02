@@ -1,23 +1,27 @@
 package com.example.subject.config.jwt;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @Getter
+@Builder
+@NoArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
-    private final String id;
-    private final String email;
-    private final String password;
-    private final boolean enabled;
-    private final List<String> roles;
+    private Long id;
+    private String email;
+    private String password;
+    private boolean enabled;
+    private Set<String> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -30,6 +34,9 @@ public class CustomUserDetails implements UserDetails {
     public String getUsername() {
         return email;
     }
+
+    @Override
+    public String getPassword() {return password;}
 
     @Override
     public boolean isAccountNonExpired() {

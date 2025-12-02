@@ -5,6 +5,7 @@ import com.example.user.dto.request.UserRegisterRequest;
 import com.example.user.dto.response.UserDto;
 import com.example.user.exception.AppException;
 import com.example.user.exception.ErrorCode;
+import com.example.user.mapper.UserMapper;
 import com.example.user.model.Role;
 import com.example.user.model.User;
 import com.example.user.model.enums.UserStatus;
@@ -28,6 +29,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final UserMapper userMapper;
 
     // --- 1. ĐĂNG KÝ (User tự đăng ký -> Mặc định là STUDENT) ---
     @Override
@@ -56,6 +58,7 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .build();
 
         userRepository.save(user);
+        return userMapper.toDto(user);
 
         emailService.sendVerificationEmail(req.getEmail(), "Xác thực tài khoản", code);
 
@@ -92,7 +95,7 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .build();
 
         userRepository.save(user);
-        return mapToUserDto(user);
+        return userMapper.toDto(user);
     }
 
     // --- 3. KHÓA TÀI KHOẢN ---
@@ -100,7 +103,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional
     public void toggleUserStatus(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (user.getStatus() == UserStatus.ACTIVE) {
             user.setStatus(UserStatus.INACTIVE);

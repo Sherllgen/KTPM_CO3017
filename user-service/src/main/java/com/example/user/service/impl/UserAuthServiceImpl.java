@@ -12,19 +12,18 @@ import com.example.user.repository.SessionRepository;
 import com.example.user.repository.UserRepository;
 import com.example.user.service.UserAuthService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserAuthServiceImpl implements UserAuthService {
-    private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final SessionRepository sessionRepository;
     private final JwtTokenProvider jwtTokenProvider;
@@ -36,10 +35,13 @@ public class UserAuthServiceImpl implements UserAuthService {
         // ... (Đoạn xác thực authenticateManager giữ nguyên) ...
 
         User user = userRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         // TẠO TOKEN
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail());
+        Set<String> roles = user.getRoles().stream()
+                .map(com.example.user.model.Role::getName)
+                .collect(Collectors.toSet());
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getEmail(), roles);
         String refreshToken = UUID.randomUUID().toString();
 
         // XỬ LÝ SESSION (Sửa đoạn này)
@@ -83,7 +85,10 @@ public class UserAuthServiceImpl implements UserAuthService {
 
         // 3. TOKEN ROTATION (Sửa lại đoạn này)
         // Thay vì xóa cũ tạo mới, ta cập nhật trực tiếp
-        String newAccessToken = jwtTokenProvider.generateAccessToken(user.getEmail());
+        Set<String> roles = user.getRoles().stream()
+                .map(com.example.user.model.Role::getName)
+                .collect(Collectors.toSet());
+        String newAccessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getEmail(), roles);
         String newRefreshToken = UUID.randomUUID().toString();
 
         // Cập nhật thông tin mới vào session cũ
@@ -96,13 +101,13 @@ public class UserAuthServiceImpl implements UserAuthService {
         return new SessionDto(newAccessToken, newRefreshToken);
     }
 
-    // Hàm phụ trợ để lưu session cho gọn code
-    private void saveSession(User user, String refreshToken) {
-        Session session = Session.builder()
-                .user(user)
-                .token(refreshToken)
-                .expiryDate(Instant.now().plus(7, ChronoUnit.DAYS))
-                .build();
-        sessionRepository.save(session);
-    }
+    // // Hàm phụ trợ để lưu session cho gọn code
+    // private void saveSession(User user, String refreshToken) {
+    // Session session = Session.builder()
+    // .user(user)
+    // .token(refreshToken)
+    // .expiryDate(Instant.now().plus(7, ChronoUnit.DAYS))
+    // .build();
+    // sessionRepository.save(session);
+    // }
 }

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
-@Tag(name = "User Authentication", description = "Các API Đăng ký, Đăng nhập, Refresh Token")
+@Tag(name = "Admin User Management", description = "Các API hỗ trợ Admin quản lý User")
 public class UserAdminController {
     private final UserAccountService userAccountService;
 
@@ -33,4 +33,12 @@ public class UserAdminController {
         userAccountService.toggleUserStatus(userId);
         return ResponseEntity.ok(new ApiResponse<>(200, "Đổi trạng thái tài khoản thành công", null));
     }
+
+        // --- DELETE USER ---
+    // @DeleteMapping("/{id}")
+    // @Operation(summary = "Xóa người dùng", description = "Xóa người dùng")
+    // public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
+    //     userAccountService.deleteUser(id);
+    //     return ResponseEntity.ok(new ApiResponse<>(200, "Xóa người dùng thành công", null));
+    // }
 }
