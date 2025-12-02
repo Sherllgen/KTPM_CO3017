@@ -11,16 +11,21 @@ import com.example.user.model.User;
 import com.example.user.model.enums.UserStatus;
 import com.example.user.repository.RoleRepository;
 import com.example.user.repository.UserRepository;
+import com.example.user.repository.UserSpecifications;
 import com.example.user.service.EmailService;
 import com.example.user.service.UserAccountService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -61,7 +66,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         emailService.sendVerificationEmail(req.getEmail(), "Xác thực tài khoản", code);
 
-        return mapToUserDto(user);
+        return userMapper.toDto(user);
     }
 
     // --- 2. TẠO USER (Admin tạo -> Cho chọn Role) ---
@@ -77,7 +82,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (req.getRoles() != null && !req.getRoles().isEmpty()) {
             for (String roleName : req.getRoles()) {
                 Role role = roleRepository.findByName(roleName)
-                        .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Role " + roleName + " không tồn tại"));
+                        .orElseThrow(
+                                () -> new AppException(ErrorCode.NOT_FOUND, "Role " + roleName + " không tồn tại"));
                 roles.add(role);
             }
         } else {
@@ -91,6 +97,8 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .fullName(req.getFullName())
                 .status(UserStatus.ACTIVE)
                 .roles(roles)
+                .phone(req.getPhone())
+                .age(req.getAge())
                 .build();
 
         userRepository.save(user);
@@ -133,14 +141,50 @@ public class UserAccountServiceImpl implements UserAccountService {
         userRepository.save(user);
     }
 
-    // Helper map data
-    private UserDto mapToUserDto(User user) {
-        return UserDto.builder()
-                .id(user.getUserId())
-                .email(user.getEmail())
-                .fullName(user.getFullName())
-                .status(user.getStatus().name())
-                .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
-                .build();
+    @Override
+    @Transactional
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        userRepository.delete(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserDto> getUsers(String role, UserStatus status, Integer page, Integer size, String sortBy, String sortDir) {
+
+
+        String sortField = (sortBy == null || sortBy.isBlank()) ? "userId" : sortBy.trim();
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        int pageSize = (size == null || size <= 0) ? 10 : size;
+        int pageIndex = (page == null || page < 1) ? 0 : page - 1;
+
+        PageRequest pageable = PageRequest.of(pageIndex, pageSize, Sort.by(direction, sortField));
+
+        Specification<User> spec = UserSpecifications.hasRole(role)
+                        .and(UserSpecifications.hasStatus(status));
+        
+        return userRepository.findAll(spec, pageable).map(userMapper::toDto);
+    }
+
+    @Override
+    @Transactional
+    public UserDto updateUserRoles(Long userId, Set<String> roleNames) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        Set<Role> roles = new HashSet<>();
+        if (roleNames != null && !roleNames.isEmpty()) {
+            for (String roleName : roleNames) {
+                Role role = roleRepository.findByName(roleName)
+                        .orElseThrow(
+                                () -> new AppException(ErrorCode.NOT_FOUND, "Role " + roleName + " không tồn tại"));
+                roles.add(role);
+            }
+        }
+
+        user.setRoles(roles);
+        userRepository.save(user);
+        return userMapper.toDto(user);
     }
 }
