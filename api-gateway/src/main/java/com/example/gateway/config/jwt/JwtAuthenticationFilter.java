@@ -20,7 +20,8 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             "/users/register",
             "/users/login",
             "/users/refresh",
-            "/eureka"
+            "/eureka",
+            "/users/verify"
     );
 
     public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {

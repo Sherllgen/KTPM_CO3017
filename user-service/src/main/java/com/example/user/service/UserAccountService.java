@@ -13,4 +13,6 @@ public interface UserAccountService {
 
     // 3. Hàm khóa/mở khóa tài khoản
     void toggleUserStatus(Long userId);
+
+    void verifyAccount(String email, String code);
 }

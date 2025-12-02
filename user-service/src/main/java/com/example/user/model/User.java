@@ -48,6 +48,8 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    private String verificationCode;
+
     @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

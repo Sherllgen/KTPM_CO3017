@@ -24,7 +24,7 @@ public class UserMaperImpl implements UserMapper {
             .status(user.getStatus().toString())
             .roles(user.getRoles() != null && !user.getRoles().isEmpty() ? user.getRoles().stream()
                                         .map(Role::getName)
-                                        .collect(Collectors.toSet()) : null)
+                                        .collect(Collectors.toList()) : null)
             .phone(user.getPhone())
             .age(user.getAge())
             .createdAt(user.getCreatedAt())
