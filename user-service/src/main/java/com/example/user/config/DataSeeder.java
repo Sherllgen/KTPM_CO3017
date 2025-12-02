@@ -36,7 +36,7 @@ public class DataSeeder implements CommandLineRunner {
 
             User admin = User.builder()
                     .email("admin@gmail.com")
-                    .password(passwordEncoder.encode("123456")) // Pass mặc định
+                    .password(passwordEncoder.encode("123456"))
                     .fullName("Super Admin")
                     .status(UserStatus.ACTIVE)
                     .roles(Set.of(adminRole))
