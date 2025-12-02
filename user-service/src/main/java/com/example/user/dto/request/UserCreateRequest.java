@@ -20,7 +20,7 @@ public class UserCreateRequest {
     @NotBlank(message = "Họ tên không được để trống")
     private String fullName;
 
-    // Admin có quyền set role ngay lúc tạo (VD: Tạo 1 giáo viên)
+    // Admin có quyền set role ngay lúc tạo
     private Set<String> roles;
 
     @NotBlank(message = "Số điện thoại không được để trống")
