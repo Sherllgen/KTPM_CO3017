@@ -22,14 +22,14 @@ public class EmailServiceImpl implements EmailService {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
 
-            String htmlMsg = "<h3>Chào mừng đến với TravelEZ!</h3>"
+            String htmlMsg = "<h3>Chào mừng đến với ITS!</h3>"
                     + "<p>Mã xác thực của bạn là: <b style='font-size: 20px; color: blue;'>" + code + "</b></p>"
                     + "<p>Vui lòng nhập mã này để kích hoạt tài khoản.</p>";
 
             helper.setText(htmlMsg, true);
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setFrom("TravelEZ Support <noreply@travelez.com>");
+            helper.setFrom("ITS Support <noreply@travelez.com>");
 
             mailSender.send(mimeMessage);
             log.info("Email xác thực đã gửi đến: {}", to);
