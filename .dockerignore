@@ -1,0 +1,10 @@
+# .dockerignore ở root directory
+target/
+.git/
+.gitignore
+*.md
+.idea/
+.vscode/
+.env
+**/target/
+**/.git/

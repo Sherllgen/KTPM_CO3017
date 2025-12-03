@@ -2,8 +2,8 @@ services:
   # Discovery Service - Phải khởi động đầu tiên
   discovery-service:
     build:
-      context: ./discovery-service
-      dockerfile: dockerfile
+      context: .
+      dockerfile: ./discovery-service/dockerfile
     container_name: discovery-service
     ports:
       - "8761:8761"
@@ -62,8 +62,8 @@ services:
   # User Service
   user-service:
     build:
-      context: ./user-service
-      dockerfile: dockerfile
+      context: .
+      dockerfile: ./user-service/dockerfile
     container_name: user-service
     env_file:
       - ./user-service/.env
@@ -97,8 +97,8 @@ services:
   # Subject Service
   subject-service:
     build:
-      context: ./subject-service
-      dockerfile: dockerfile
+      context: .
+      dockerfile: ./subject-service/dockerfile
     container_name: subject-service
     env_file:
       - ./subject-service/.env
@@ -142,8 +142,8 @@ services:
   # API Gateway - Khởi động cuối cùng
   api-gateway:
     build:
-      context: ./api-gateway
-      dockerfile: dockerfile
+      context: .
+      dockerfile: ./api-gateway/dockerfile
     container_name: api-gateway
     env_file:
       - ./api-gateway/.env
