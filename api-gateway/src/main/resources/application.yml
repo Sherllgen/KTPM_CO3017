@@ -6,32 +6,57 @@ spring:
     name: api-gateway
   cloud:
     gateway:
-      server: 
-        webflux:
-          discovery:
-            locator:
-              enabled: true
-              lower-case-service-id: true
-          routes:
-            - id: user-service
-              uri: lb://user-service
-              predicates:
-                - Path=/user/**
-              filters:
-                - JwtAuthenticationFilter
-            - id: subject-service
-              uri: lb://subject-service
-              predicates:
-                - Path=/subject/**
-              filters:
-                - JwtAuthenticationFilter
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      httpclient:
+        connect-timeout: 10000
+        response-timeout: 60s
+      routes:
+        - id: user-public
+          uri: lb://user-service
+          predicates:
+            - Path=/users/register,/users/login,/users/refresh,/users/logout
+        
+        - id: user-admin
+          uri: lb://user-service
+          predicates:
+            - Path=/admin/users/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        - id: user-me
+          uri: lb://user-service
+          predicates:
+            - Path=/users/me/**
+          filters:
+            - JwtAuthenticationFilter
+        
+        - id: subject-public
+          uri: lb://subject-service
+          predicates:
+            - Path=/api/subject/**
+            - Method=GET
+          metadata:
+            response-timeout: 60000
+        
+        - id: subject-admin
+          uri: lb://subject-service
+          predicates:
+            - Path=/api/admin/subjects/**
+          filters:
+            - JwtAuthenticationFilter
+          metadata:
+            response-timeout: 60000
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
+    should-on-demand-update-status-change: true
 
 management:
   endpoints:

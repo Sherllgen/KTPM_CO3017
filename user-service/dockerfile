@@ -1,0 +1,34 @@
+# Stage 1: Build
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /app
+
+# 1. Copy all POM files first
+# Maven needs to understand the parent-child structure
+COPY pom.xml .
+COPY discovery-service/pom.xml ./discovery-service/
+COPY api-gateway/pom.xml ./api-gateway/
+COPY user-service/pom.xml ./user-service/
+COPY subject-service/pom.xml ./subject-service/
+
+# 2. Download dependencies with cache mount
+# Cache mount keeps .m2 directory even if pom.xml changes
+# This layer is cached and only rebuilds when POMs change
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:go-offline -B -pl user-service -am
+
+# 3. Copy source code (separate layer for better caching)
+# When only source changes, layers above stay cached
+COPY user-service/src ./user-service/src
+
+# 4. Build with cache mount
+# -am: also make dependencies
+# No 'clean' needed (Docker container is already clean)
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn package -DskipTests -pl user-service -am
+
+# Stage 2: Run
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=build /app/user-service/target/*.jar app.jar
+EXPOSE 8081
+ENTRYPOINT ["java", "-jar", "app.jar"]

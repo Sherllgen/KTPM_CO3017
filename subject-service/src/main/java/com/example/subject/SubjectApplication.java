@@ -8,17 +8,19 @@ import java.util.Properties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 @EnableDiscoveryClient
+@EnableFeignClients
 public class SubjectApplication {
 
-    public static void main(String[] args) {
-        loadEnvFile();
-        SpringApplication.run(SubjectApplication.class, args);
-    }
+	public static void main(String[] args) {
+		loadEnvFile();
+		SpringApplication.run(SubjectApplication.class, args);
+	}
 
-    public static void loadEnvFile() {
+	public static void loadEnvFile() {
 		try {
 			File envFile = new File(System.getProperty("user.dir") + "/.env");
 			if (envFile.exists()) {

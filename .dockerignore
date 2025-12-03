@@ -1,0 +1,55 @@
+# .dockerignore ở root directory
+
+# Build artifacts
+target/
+**/target/
+*.jar
+*.war
+*.ear
+*.class
+
+# Version control
+.git/
+**/.git/
+.gitignore
+.gitattributes
+
+# IDE files
+.idea/
+.vscode/
+.eclipse/
+.settings/
+*.iml
+*.ipr
+*.iws
+
+# Environment files
+.env
+**/.env
+.env.local
+.env.*.local
+
+# Documentation (excluding from builds)
+*.md
+README*
+LICENSE
+CHANGELOG*
+
+# Test and coverage reports
+**/test-reports/
+**/coverage/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files (don't copy other Dockerfiles)
+**/docker-compose*.yml
+docker-compose*.yml
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~

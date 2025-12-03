@@ -1,0 +1,1120 @@
+{
+  "info": {
+    "_postman_id": "53e9fc5e-e170-4f53-9f3d-3b79dbcfe567",
+    "name": "Microservices Testing",
+    "description": "Postman Collection cho Microservices Project - KTPM_CO3017\n\nCollection được tổ chức theo 2 cách:\n1. Via API Gateway - Tất cả API qua gateway (localhost:8080)\n2. Direct Services - API trực tiếp đến từng service\n\nCác API được cập nhật dựa trên code thực tế trong dự án.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Via API Gateway (localhost:8080)",
+      "description": "Tất cả API được gọi qua API Gateway. Đây là cách khuyến nghị trong production.",
+      "item": [
+        {
+          "name": "User Service - Auth",
+          "item": [
+            {
+              "name": "Register",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"Password123\",\n    \"fullName\": \"Test User\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:8080/users/register",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "users",
+                    "register"
+                  ]
+                },
+                "description": "Đăng ký người dùng mới. Role mặc định là STUDENT."
+              },
+              "response": []
+            },
+            {
+              "name": "Login",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    if (jsonData.data && jsonData.data.accessToken) {",
+                      "        pm.environment.set(\"access_token\", jsonData.data.accessToken);",
+                      "    }",
+                      "    if (jsonData.data && jsonData.data.refreshToken) {",
+                      "        pm.environment.set(\"refresh_token\", jsonData.data.refreshToken);",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"Password123\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:8080/users/login",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "users",
+                    "login"
+                  ]
+                },
+                "description": "Đăng nhập bằng email và password. Trả về Access Token trong body và Refresh Token trong HttpOnly Cookie."
+              },
+              "response": []
+            },
+            {
+              "name": "Refresh Token",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    if (jsonData.data && jsonData.data.accessToken) {",
+                      "        pm.environment.set(\"access_token\", jsonData.data.accessToken);",
+                      "    }",
+                      "    if (jsonData.data && jsonData.data.refreshToken) {",
+                      "        pm.environment.set(\"refresh_token\", jsonData.data.refreshToken);",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "http://localhost:8080/users/refresh",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "users",
+                    "refresh"
+                  ]
+                },
+                "description": "Làm mới Access Token dựa trên Refresh Token trong Cookie. Không cần gửi body, Refresh Token được lấy từ Cookie tự động."
+              },
+              "response": []
+            },
+            {
+              "name": "Logout",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:8080/users/logout",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "users",
+                    "logout"
+                  ]
+                },
+                "description": "Đăng xuất. Xóa Session trong DB và xóa Cookie Refresh Token. Refresh Token được lấy từ Cookie tự động."
+              },
+              "response": []
+            }
+          ],
+          "description": "API xác thực người dùng qua API Gateway"
+        },
+        {
+          "name": "User Service - Admin",
+          "item": [
+            {
+              "name": "Create User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\": \"newuser@example.com\",\n    \"password\": \"Password123\",\n    \"fullName\": \"New User\",\n    \"roles\": [\"STUDENT\"]\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:8080/admin/users",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "admin",
+                    "users"
+                  ]
+                },
+                "description": "Tạo người dùng mới (Admin). Có thể chỉ định roles (STUDENT, TEACHER, ADMIN, etc.). Nếu không chỉ định roles, mặc định là STUDENT."
+              },
+              "response": []
+            },
+            {
+              "name": "Toggle User Status",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:8080/admin/users/1/status",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "admin",
+                    "users",
+                    "1",
+                    "status"
+                  ]
+                },
+                "description": "Khóa/Mở khóa tài khoản. Chuyển đổi trạng thái user giữa ACTIVE và INACTIVE."
+              },
+              "response": []
+            }
+          ],
+          "description": "API quản lý người dùng (Admin) qua API Gateway - yêu cầu JWT token"
+        },
+        {
+          "name": "Subject Service - Public",
+          "item": [
+            {
+              "name": "Get All Subjects",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:8080/api/subject?page=0&size=10",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "api",
+                    "subject"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0",
+                      "description": "Số trang (bắt đầu từ 0)"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10",
+                      "description": "Số lượng items mỗi trang"
+                    }
+                  ]
+                },
+                "description": "Lấy danh sách tất cả môn học với phân trang"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Subject By ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:8080/api/subject/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "api",
+                    "subject",
+                    "1"
+                  ]
+                },
+                "description": "Lấy thông tin một môn học theo ID"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Subject Topics",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:8080/api/subject/1/topics",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "api",
+                    "subject",
+                    "1",
+                    "topics"
+                  ]
+                },
+                "description": "Lấy danh sách chủ đề của một môn học"
+              },
+              "response": []
+            }
+          ],
+          "description": "API liên quan đến môn học (public - không cần authentication) qua API Gateway"
+        },
+        {
+          "name": "Subject Service - Admin",
+          "item": [
+            {
+              "name": "Create Subject",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"code\": \"KTPM101\",\n    \"name\": \"Kiến trúc phần mềm\",\n    \"level\": \"UNDERGRADUATE\",\n    \"description\": \"Môn học về kiến trúc phần mềm\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:8080/api/admin/subjects",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "api",
+                    "admin",
+                    "subjects"
+                  ]
+                },
+                "description": "Tạo môn học mới (Admin)"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Subject",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"code\": \"KTPM101\",\n    \"name\": \"Kiến trúc phần mềm nâng cao\",\n    \"level\": \"UNDERGRADUATE\",\n    \"description\": \"Môn học nâng cao về kiến trúc phần mềm\",\n    \"status\": \"ACTIVE\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:8080/api/admin/subjects/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "api",
+                    "admin",
+                    "subjects",
+                    "1"
+                  ]
+                },
+                "description": "Cập nhật môn học (Admin). Status có thể là: ACTIVE, INACTIVE, ARCHIVED"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Subject",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:8080/api/admin/subjects/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "api",
+                    "admin",
+                    "subjects",
+                    "1"
+                  ]
+                },
+                "description": "Xóa môn học (Admin). Sẽ xóa cả các topics liên quan."
+              },
+              "response": []
+            },
+            {
+              "name": "Add Topic",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"title\": \"Microservices\",\n    \"description\": \"Kiến trúc Microservices\",\n    \"orderIndex\": 1\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:8080/api/admin/subjects/1/topics",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "api",
+                    "admin",
+                    "subjects",
+                    "1",
+                    "topics"
+                  ]
+                },
+                "description": "Thêm chủ đề vào môn học (Admin)"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Topic",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"title\": \"Microservices Architecture\",\n    \"description\": \"Kiến trúc và thiết kế Microservices\",\n    \"orderIndex\": 1\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:8080/api/admin/subjects/topics/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "api",
+                    "admin",
+                    "subjects",
+                    "topics",
+                    "1"
+                  ]
+                },
+                "description": "Cập nhật chủ đề (Admin). Sử dụng topicId trong URL, không phải subjectId/topicId"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Topic",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:8080/api/admin/subjects/topics/1",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "api",
+                    "admin",
+                    "subjects",
+                    "topics",
+                    "1"
+                  ]
+                },
+                "description": "Xóa chủ đề (Admin). Sử dụng topicId trong URL, không phải subjectId/topicId"
+              },
+              "response": []
+            }
+          ],
+          "description": "API quản lý môn học (Admin) qua API Gateway - yêu cầu JWT token"
+        }
+      ]
+    },
+    {
+      "name": "2. Direct Services",
+      "description": "API được gọi trực tiếp đến từng service. Chỉ dùng cho testing/debugging.",
+      "item": [
+        {
+          "name": "User Service (localhost:8081)",
+          "item": [
+            {
+              "name": "Auth",
+              "item": [
+                {
+                  "name": "Register",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"Password123\",\n    \"fullName\": \"Test User\"\n}"
+                    },
+                    "url": {
+                      "raw": "http://localhost:8081/users/register",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8081",
+                      "path": [
+                        "users",
+                        "register"
+                      ]
+                    },
+                    "description": "Đăng ký người dùng mới. Role mặc định là STUDENT."
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Login",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "if (pm.response.code === 200) {",
+                          "    var jsonData = pm.response.json();",
+                          "    if (jsonData.data && jsonData.data.accessToken) {",
+                          "        pm.environment.set(\"access_token\", jsonData.data.accessToken);",
+                          "    }",
+                          "    if (jsonData.data && jsonData.data.refreshToken) {",
+                          "        pm.environment.set(\"refresh_token\", jsonData.data.refreshToken);",
+                          "    }",
+                          "}"
+                        ],
+                        "type": "text/javascript"
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"Password123\"\n}"
+                    },
+                    "url": {
+                      "raw": "http://localhost:8081/users/login",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8081",
+                      "path": [
+                        "users",
+                        "login"
+                      ]
+                    },
+                    "description": "Đăng nhập bằng email và password. Trả về Access Token trong body và Refresh Token trong HttpOnly Cookie."
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Refresh Token",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "if (pm.response.code === 200) {",
+                          "    var jsonData = pm.response.json();",
+                          "    if (jsonData.data && jsonData.data.accessToken) {",
+                          "        pm.environment.set(\"access_token\", jsonData.data.accessToken);",
+                          "    }",
+                          "    if (jsonData.data && jsonData.data.refreshToken) {",
+                          "        pm.environment.set(\"refresh_token\", jsonData.data.refreshToken);",
+                          "    }",
+                          "}"
+                        ],
+                        "type": "text/javascript"
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": ""
+                    },
+                    "url": {
+                      "raw": "http://localhost:8081/users/refresh",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8081",
+                      "path": [
+                        "users",
+                        "refresh"
+                      ]
+                    },
+                    "description": "Làm mới Access Token dựa trên Refresh Token trong Cookie. Không cần gửi body, Refresh Token được lấy từ Cookie tự động."
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Logout",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:8081/users/logout",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8081",
+                      "path": [
+                        "users",
+                        "logout"
+                      ]
+                    },
+                    "description": "Đăng xuất. Xóa Session trong DB và xóa Cookie Refresh Token. Refresh Token được lấy từ Cookie tự động."
+                  },
+                  "response": []
+                }
+              ],
+              "description": "API xác thực người dùng"
+            },
+            {
+              "name": "Admin",
+              "item": [
+                {
+                  "name": "Create User",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"email\": \"newuser@example.com\",\n    \"password\": \"Password123\",\n    \"fullName\": \"New User\",\n    \"roles\": [\"STUDENT\"]\n}"
+                    },
+                    "url": {
+                      "raw": "http://localhost:8081/admin/users",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8081",
+                      "path": [
+                        "admin",
+                        "users"
+                      ]
+                    },
+                    "description": "Tạo người dùng mới (Admin). Có thể chỉ định roles (STUDENT, TEACHER, ADMIN, etc.). Nếu không chỉ định roles, mặc định là STUDENT."
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Toggle User Status",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "http://localhost:8081/admin/users/1/status",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8081",
+                      "path": [
+                        "admin",
+                        "users",
+                        "1",
+                        "status"
+                      ]
+                    },
+                    "description": "Khóa/Mở khóa tài khoản. Chuyển đổi trạng thái user giữa ACTIVE và INACTIVE."
+                  },
+                  "response": []
+                }
+              ],
+              "description": "API quản lý người dùng (Admin) - yêu cầu JWT token"
+            }
+          ],
+          "description": "API của User Service - Port 8081"
+        },
+        {
+          "name": "Subject Service (localhost:8082)",
+          "item": [
+            {
+              "name": "Public APIs",
+              "item": [
+                {
+                  "name": "Get All Subjects",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:8082/api/subject?page=0&size=10",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8082",
+                      "path": [
+                        "api",
+                        "subject"
+                      ],
+                      "query": [
+                        {
+                          "key": "page",
+                          "value": "0",
+                          "description": "Số trang (bắt đầu từ 0)"
+                        },
+                        {
+                          "key": "size",
+                          "value": "10",
+                          "description": "Số lượng items mỗi trang"
+                        }
+                      ]
+                    },
+                    "description": "Lấy danh sách tất cả môn học với phân trang"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get Subject By ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:8082/api/subject/1",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8082",
+                      "path": [
+                        "api",
+                        "subject",
+                        "1"
+                      ]
+                    },
+                    "description": "Lấy thông tin một môn học theo ID"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get Subject Topics",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "http://localhost:8082/api/subject/1/topics",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8082",
+                      "path": [
+                        "api",
+                        "subject",
+                        "1",
+                        "topics"
+                      ]
+                    },
+                    "description": "Lấy danh sách chủ đề của một môn học"
+                  },
+                  "response": []
+                }
+              ],
+              "description": "API liên quan đến môn học (public - không cần authentication)"
+            },
+            {
+              "name": "Admin APIs",
+              "item": [
+                {
+                  "name": "Create Subject",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"code\": \"KTPM101\",\n    \"name\": \"Kiến trúc phần mềm\",\n    \"level\": \"UNDERGRADUATE\",\n    \"description\": \"Môn học về kiến trúc phần mềm\"\n}"
+                    },
+                    "url": {
+                      "raw": "http://localhost:8082/api/admin/subjects",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8082",
+                      "path": [
+                        "api",
+                        "admin",
+                        "subjects"
+                      ]
+                    },
+                    "description": "Tạo môn học mới (Admin)"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Update Subject",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"code\": \"KTPM101\",\n    \"name\": \"Kiến trúc phần mềm nâng cao\",\n    \"level\": \"UNDERGRADUATE\",\n    \"description\": \"Môn học nâng cao về kiến trúc phần mềm\",\n    \"status\": \"ACTIVE\"\n}"
+                    },
+                    "url": {
+                      "raw": "http://localhost:8082/api/admin/subjects/1",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8082",
+                      "path": [
+                        "api",
+                        "admin",
+                        "subjects",
+                        "1"
+                      ]
+                    },
+                    "description": "Cập nhật môn học (Admin). Status có thể là: ACTIVE, INACTIVE, ARCHIVED"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Delete Subject",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "http://localhost:8082/api/admin/subjects/1",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8082",
+                      "path": [
+                        "api",
+                        "admin",
+                        "subjects",
+                        "1"
+                      ]
+                    },
+                    "description": "Xóa môn học (Admin). Sẽ xóa cả các topics liên quan."
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Add Topic",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"title\": \"Microservices\",\n    \"description\": \"Kiến trúc Microservices\",\n    \"orderIndex\": 1\n}"
+                    },
+                    "url": {
+                      "raw": "http://localhost:8082/api/admin/subjects/1/topics",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8082",
+                      "path": [
+                        "api",
+                        "admin",
+                        "subjects",
+                        "1",
+                        "topics"
+                      ]
+                    },
+                    "description": "Thêm chủ đề vào môn học (Admin)"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Update Topic",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"title\": \"Microservices Architecture\",\n    \"description\": \"Kiến trúc và thiết kế Microservices\",\n    \"orderIndex\": 1\n}"
+                    },
+                    "url": {
+                      "raw": "http://localhost:8082/api/admin/subjects/topics/1",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8082",
+                      "path": [
+                        "api",
+                        "admin",
+                        "subjects",
+                        "topics",
+                        "1"
+                      ]
+                    },
+                    "description": "Cập nhật chủ đề (Admin). Sử dụng topicId trong URL, không phải subjectId/topicId"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Delete Topic",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "http://localhost:8082/api/admin/subjects/topics/1",
+                      "protocol": "http",
+                      "host": [
+                        "localhost"
+                      ],
+                      "port": "8082",
+                      "path": [
+                        "api",
+                        "admin",
+                        "subjects",
+                        "topics",
+                        "1"
+                      ]
+                    },
+                    "description": "Xóa chủ đề (Admin). Sử dụng topicId trong URL, không phải subjectId/topicId"
+                  },
+                  "response": []
+                }
+              ],
+              "description": "API quản lý môn học (Admin) - yêu cầu JWT token"
+            }
+          ],
+          "description": "API của Subject Service - Port 8082"
+        },
+        {
+          "name": "Discovery Service (localhost:8761)",
+          "item": [
+            {
+              "name": "Eureka Dashboard",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:8761",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8761",
+                  "path": []
+                },
+                "description": "Truy cập Eureka Dashboard để xem các service đã đăng ký"
+              },
+              "response": []
+            },
+            {
+              "name": "Eureka Health",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:8761/actuator/health",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8761",
+                  "path": [
+                    "actuator",
+                    "health"
+                  ]
+                },
+                "description": "Kiểm tra health của Eureka Discovery Service"
+              },
+              "response": []
+            }
+          ],
+          "description": "API của Discovery Service (Eureka) - Port 8761"
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": []
+}
