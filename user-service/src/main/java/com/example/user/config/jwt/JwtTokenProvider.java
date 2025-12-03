@@ -10,8 +10,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -27,13 +31,19 @@ public class JwtTokenProvider {
     private long refreshTokenExpiration;
 
     public String generateAccessToken(Authentication authentication) {
-        UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
-        return generateAccessToken(userPrincipal.getUsername());
+        CustomUserDetails userPrincipal = (CustomUserDetails) authentication.getPrincipal();
+        return generateAccessToken(userPrincipal.getId(), userPrincipal.getUsername(), userPrincipal.getRoles());
     }
 
-    public String generateAccessToken(String username) {
+    public String generateAccessToken(Long userId, String username) {
+        return generateAccessToken(userId, username, Collections.emptySet());
+    }
+
+    public String generateAccessToken(Long userId, String username, Set<String> roles) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(String.valueOf(userId))
+                .claim("username", username)
+                .claim("roles", roles)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -60,7 +70,23 @@ public class JwtTokenProvider {
     }
 
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractClaim(token, claims -> {
+            String username = claims.get("username", String.class);
+            return username != null ? username : claims.getSubject();
+        });
+    }
+
+    public Set<String> extractRoles(String token) {
+        return extractClaim(token, claims -> {
+            List<?> roles = claims.get("roles", List.class);
+            if (roles == null) {
+                return Collections.emptySet();
+            }
+            return roles.stream()
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .collect(Collectors.toSet());
+        });
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {

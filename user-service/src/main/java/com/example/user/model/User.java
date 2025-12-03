@@ -1,7 +1,11 @@
 package com.example.user.model;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import com.example.user.model.enums.UserStatus;
 
@@ -33,6 +37,18 @@ public class User {
     private UserStatus status;
 
     private String fullName;
+
+    private String phone;
+
+    private Integer age;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    private String verificationCode;
 
     @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)

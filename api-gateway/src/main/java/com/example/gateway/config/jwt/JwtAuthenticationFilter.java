@@ -20,7 +20,8 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             "/users/register",
             "/users/login",
             "/users/refresh",
-            "/eureka"
+            "/eureka",
+            "/users/verify"
     );
 
     public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
@@ -28,7 +29,6 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    // TODO: complete this method
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {

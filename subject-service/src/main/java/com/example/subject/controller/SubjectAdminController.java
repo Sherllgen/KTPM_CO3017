@@ -20,19 +20,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/subjects")
 @Slf4j
 @Tag(name = "Subject Admin Controller", description = "APIs for managing subjects by admin")
-// @SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = "bearerAuth")
 public class SubjectAdminController {
     private final SubjectService subjectService;
     private final TopicService topicService;
 
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @Operation(summary = "Create a new subject", description = "Creates a new subject with the provided details.")
     public ResponseEntity<ApiResponse<SubjectDto>> createSubject(@RequestBody SubjectCreateRequest request) {
@@ -46,7 +44,7 @@ public class SubjectAdminController {
                 .build());
     }
 
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{subjectId}")
     @Operation(summary = "Update an existing subject", description = "Updates an existing subject with the provided details.")
     public ResponseEntity<ApiResponse<SubjectDto>> updateSubject(@PathVariable Long subjectId, @RequestBody SubjectUpdateRequest request) {
@@ -60,7 +58,7 @@ public class SubjectAdminController {
                 .build());
     }
 
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{subjectId}")
     @Operation(summary = "Delete a subject", description = "Deletes a subject by its id along with all associated topics.")
     public ResponseEntity<ApiResponse<Void>> deleteSubject(@PathVariable Long subjectId) {
@@ -73,7 +71,7 @@ public class SubjectAdminController {
                 .build());
     }
 
-    //    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{subjectId}/topics")
     @Operation(summary = "Create topics for a subject", description = "Creates topics associated with a specific subject.")
     public ResponseEntity<ApiResponse<TopicDto>> createTopicsForSubject(
@@ -88,8 +86,8 @@ public class SubjectAdminController {
                 .build());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/topics/{topicId}")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'INSTRUCTOR')")
     @Operation(summary = "Update a topic", description = "Updates a specific topic by its id.")
     public ResponseEntity<ApiResponse<TopicDto>> updateTopic(
             @PathVariable Long topicId,
@@ -102,8 +100,8 @@ public class SubjectAdminController {
                 .build());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/topics/{topicId}")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'INSTRUCTOR')")
     @Operation(summary = "Delete a topic", description = "Deletes a specific topic by its id.")
     public ResponseEntity<ApiResponse<Void>> deleteTopic(
             @PathVariable Long topicId) {
