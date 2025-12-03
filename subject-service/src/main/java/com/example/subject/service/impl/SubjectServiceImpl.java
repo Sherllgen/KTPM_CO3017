@@ -3,28 +3,40 @@ package com.example.subject.service.impl;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.subject.client.UserServiceClient;
+import com.example.subject.config.ApiResponse;
 import com.example.subject.dto.request.SubjectCreateRequest;
 import com.example.subject.dto.request.SubjectUpdateRequest;
+import com.example.subject.dto.response.InstructorAssignmentDto;
 import com.example.subject.dto.response.PageResponse;
 import com.example.subject.dto.response.SubjectDto;
+import com.example.subject.dto.response.UserValidationDto;
 import com.example.subject.exception.AppException;
 import com.example.subject.exception.ErrorCode;
 import com.example.subject.mapper.SubjectMapper;
 import com.example.subject.model.Subject;
+import com.example.subject.model.SubjectInstructorAssignment;
 import com.example.subject.model.enums.SubjectStatus;
+import com.example.subject.repository.SubjectInstructorAssignmentRepository;
 import com.example.subject.repository.SubjectRepository;
 import com.example.subject.service.SubjectService;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SubjectServiceImpl implements SubjectService {
     private final SubjectRepository subjectRepository;
     private final SubjectMapper subjectMapper;
+    private final UserServiceClient userServiceClient;
+    private final SubjectInstructorAssignmentRepository assignmentRepository;
 
     @Override
     @Transactional
@@ -84,20 +96,19 @@ public class SubjectServiceImpl implements SubjectService {
 
         return new PageResponse<>(
                 dtoPage.getContent(),
-                dtoPage.getNumber(),         
+                dtoPage.getNumber(),
                 dtoPage.getSize(),
                 dtoPage.getTotalElements(),
                 dtoPage.getTotalPages(),
                 dtoPage.isFirst(),
-                dtoPage.isLast()
-        );
+                dtoPage.isLast());
     }
 
     @Override
     public SubjectDto getSubjectById(Long subjectId) {
         Subject subject = subjectRepository.findBySubjectId(subjectId);
         if (subject == null) {
-            throw new AppException(ErrorCode.SUBJECT_NOT_FOUND);   
+            throw new AppException(ErrorCode.SUBJECT_NOT_FOUND);
         }
         return subjectMapper.toDto(subject);
     }
@@ -109,5 +120,86 @@ public class SubjectServiceImpl implements SubjectService {
             throw new AppException(ErrorCode.SUBJECT_NOT_FOUND);
         }
         subjectRepository.deleteById(subjectId);
+    }
+
+    @Override
+    @Transactional
+    public InstructorAssignmentDto assignInstructor(Long subjectId, Long instructorId) {
+        log.info("Assigning instructor {} to subject {}", instructorId, subjectId);
+
+        // 1. Validate subject exists
+        Subject subject = subjectRepository.findBySubjectId(subjectId);
+        if (subject == null) {
+            throw new AppException(ErrorCode.SUBJECT_NOT_FOUND);
+        }
+
+        // 2. Check if instructor is already assigned
+        if (assignmentRepository.existsBySubjectSubjectIdAndInstructorId(subjectId, instructorId)) {
+            throw new AppException(ErrorCode.INSTRUCTOR_ALREADY_ASSIGNED);
+        }
+
+        // 3. Validate instructor via Feign Client
+        UserValidationDto userValidation;
+        try {
+            ResponseEntity<ApiResponse<UserValidationDto>> response = userServiceClient
+                    .validateInstructor(instructorId);
+
+            if (response.getBody() == null || response.getBody().getData() == null) {
+                throw new AppException(ErrorCode.INSTRUCTOR_NOT_FOUND);
+            }
+
+            userValidation = response.getBody().getData();
+
+        } catch (FeignException.NotFound e) {
+            log.error("Instructor not found: {}", instructorId);
+            throw new AppException(ErrorCode.INSTRUCTOR_NOT_FOUND);
+        } catch (FeignException e) {
+            log.error("Error calling user service: {}", e.getMessage());
+            throw new AppException(ErrorCode.USER_SERVICE_UNAVAILABLE);
+        }
+
+        // 4. Validate user is an instructor and active
+        if (!userValidation.getIsInstructor()) {
+            throw new AppException(ErrorCode.INSTRUCTOR_NOT_VALID);
+        }
+
+        // 5. Create assignment
+        SubjectInstructorAssignment assignment = SubjectInstructorAssignment.builder()
+                .subject(subject)
+                .instructorId(instructorId)
+                .build();
+
+        SubjectInstructorAssignment savedAssignment = assignmentRepository.save(assignment);
+
+        log.info("Successfully assigned instructor {} to subject {}", instructorId, subjectId);
+
+        return InstructorAssignmentDto.builder()
+                .subjectInstructorAssignmentId(savedAssignment.getSubjectInstructorAssignmentId())
+                .subjectId(subjectId)
+                .instructorId(instructorId)
+                .instructorName(userValidation.getFullName())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public void removeInstructor(Long subjectId, Long instructorId) {
+        log.info("Removing instructor {} from subject {}", instructorId, subjectId);
+
+        // 1. Validate subject exists
+        Subject subject = subjectRepository.findBySubjectId(subjectId);
+        if (subject == null) {
+            throw new AppException(ErrorCode.SUBJECT_NOT_FOUND);
+        }
+
+        // 2. Find assignment
+        SubjectInstructorAssignment assignment = assignmentRepository
+                .findBySubjectSubjectIdAndInstructorId(subjectId, instructorId)
+                .orElseThrow(() -> new AppException(ErrorCode.INSTRUCTOR_NOT_ASSIGNED));
+
+        // 3. Delete assignment
+        assignmentRepository.delete(assignment);
+
+        log.info("Successfully removed instructor {} from subject {}", instructorId, subjectId);
     }
 }

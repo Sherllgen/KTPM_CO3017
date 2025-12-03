@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Getter 
+@Getter
 @Setter
 @Builder
 @NoArgsConstructor
@@ -43,6 +43,6 @@ public class Subject {
     private Set<Topic> topics;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<SubjectInstructorAssignment> subjectInstructorAssignments;
 }
