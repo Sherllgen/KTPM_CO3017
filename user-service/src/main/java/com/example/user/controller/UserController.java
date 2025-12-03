@@ -2,8 +2,11 @@ package com.example.user.controller;
 
 import com.example.user.config.ApiResponse;
 import com.example.user.dto.request.UserProfileUpdateRequest;
+import com.example.user.dto.request.UserResetPasswordRequest;
+import com.example.user.dto.request.UserUpdatePasswordRequest;
 import com.example.user.dto.response.UserDto;
 import com.example.user.service.UserAccountService;
+import com.example.user.service.UserPasswordService;
 import com.example.user.service.UserProfileService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
     private final UserProfileService userProfileService;
     private final UserAccountService userAccountService;
+    private final UserPasswordService userPasswordService;
 
     // --- GET USER PROFILE ---
     @GetMapping("/me")
@@ -46,12 +50,5 @@ public class UserController {
 
         UserDto user = userProfileService.updateUser(currentUserId, request);
         return ResponseEntity.ok(new ApiResponse<>(200, "Cập nhật thông tin người dùng thành công", user));
-    }
-
-    @PostMapping("/verify")
-    @Operation(summary = "Xác thực email", description = "Nhập email và mã code 6 số nhận được để kích hoạt tài khoản")
-    public ResponseEntity<ApiResponse<Void>> verifyAccount(@RequestParam String email, @RequestParam String code) {
-        userAccountService.verifyAccount(email, code);
-        return ResponseEntity.ok(new ApiResponse<>(200, "Kích hoạt tài khoản thành công! Bạn có thể đăng nhập.", null));
     }
 }

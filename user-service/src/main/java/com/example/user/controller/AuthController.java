@@ -1,13 +1,17 @@
 package com.example.user.controller;
 
 import com.example.user.config.ApiResponse;
+import com.example.user.config.jwt.SecurityUtil;
 import com.example.user.dto.request.UserLoginRequest;
 import com.example.user.dto.request.UserRegisterRequest;
+import com.example.user.dto.request.UserResetPasswordRequest;
+import com.example.user.dto.request.UserUpdatePasswordRequest;
 import com.example.user.dto.response.AuthTokenDto;
 import com.example.user.dto.response.SessionDto;
 import com.example.user.dto.response.UserDto;
 import com.example.user.service.UserAccountService;
 import com.example.user.service.UserAuthService;
+import com.example.user.service.UserPasswordService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,10 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final UserAuthService userAuthService;
     private final UserAccountService userAccountService;
+    private final UserPasswordService userPasswordService;
 
     // --- REGISTER ---
     @PostMapping("/register")
@@ -101,6 +103,34 @@ public class AuthController {
             }
         }
         throw new RuntimeException("Refresh Token không tìm thấy trong Cookie");
+    }
+    @PostMapping("/verify")
+    @Operation(summary = "Xác thực email", description = "Nhập email và mã code 6 số nhận được để kích hoạt tài khoản")
+    public ResponseEntity<ApiResponse<Void>> verifyAccount(@RequestParam String email, @RequestParam String code) {
+        userAccountService.verifyAccount(email, code);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Kích hoạt tài khoản thành công! Bạn có thể đăng nhập.", null));
+    }
+
+    @PutMapping("/me/password")
+    @Operation(summary = "Change password", description = "User changes their password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(@RequestBody @Valid UserUpdatePasswordRequest request) {
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        userPasswordService.changePassword(currentUserId, request);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Change password successfully", null));
+    }
+
+    @PostMapping("/me/password/forgot")
+    @Operation(summary = "Forget password", description = "Send OTP to email for password reset")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestParam String email) {
+        userPasswordService.sendPasswordResetOtp(email);
+        return ResponseEntity.ok(new ApiResponse<>(200, "OTP code has been sent", null));
+    }
+
+    @PostMapping("/me/password/reset")
+    @Operation(summary = "Reset password", description = "Reset password using OTP code")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody @Valid UserResetPasswordRequest request) {
+        userPasswordService.resetPassword(request);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Reset password successfully", null));
     }
 }
 
