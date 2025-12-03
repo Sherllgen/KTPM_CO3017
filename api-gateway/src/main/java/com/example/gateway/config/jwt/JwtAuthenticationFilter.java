@@ -54,8 +54,19 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                 return onError(exchange, "Invalid JWT token", HttpStatus.UNAUTHORIZED);
             }
 
-            // 4. Token ngon -> Cho qua
-            return chain.filter(exchange);
+            try {
+                String userId = jwtTokenProvider.extractUsername(token);
+                String role = jwtTokenProvider.extractClaim(token, claims -> claims.get("role", String.class));
+                
+                var modifiedRequest = exchange.getRequest().mutate()
+                        .header("X-User-Id", userId)
+                        .header("X-User-Role", role != null ? role : "USER")
+                        .build();
+                
+                return chain.filter(exchange.mutate().request(modifiedRequest).build());
+            } catch (Exception e) {
+                return onError(exchange, "Failed to extract user information", HttpStatus.UNAUTHORIZED);
+            }
         };
     }
 
