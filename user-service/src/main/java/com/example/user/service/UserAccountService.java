@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import com.example.user.dto.request.UserCreateRequest;
 import com.example.user.dto.request.UserRegisterRequest;
 import com.example.user.dto.response.UserDto;
+import com.example.user.dto.response.UserValidationDto;
 import com.example.user.model.enums.UserStatus;
 import java.util.Set;
 
@@ -27,4 +28,7 @@ public interface UserAccountService {
 
     // 5. Cập nhật role cho user
     UserDto updateUserRoles(Long userId, Set<String> roleNames);
+
+    // 6. Validate instructor for inter-service communication
+    UserValidationDto validateInstructor(Long userId);
 }

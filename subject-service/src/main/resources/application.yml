@@ -21,7 +21,7 @@ spring:
 
 eureka:
   client:
-    enabled: true
+    enabled: true  # Enable Eureka client for service discovery
     service-url:
       defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
     register-with-eureka: true

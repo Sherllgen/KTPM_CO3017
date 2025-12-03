@@ -1,4 +1,4 @@
-package com.example.user.config;  
+package com.example.user.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,6 +45,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/internal/**").permitAll() // Allow internal APIs for inter-service
+                                                                         // communication
                         .requestMatchers("/admin/**", "/users/**").authenticated()
                         .requestMatchers("/actuator/**", "/v3/api-docs/**", "/swagger-ui/**")
                         .permitAll()
