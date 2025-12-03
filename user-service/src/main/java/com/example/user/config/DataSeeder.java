@@ -26,16 +26,16 @@ public class DataSeeder implements CommandLineRunner {
         if (roleRepository.count() == 0) {
             roleRepository.save(Role.builder().name("ADMIN").build());
             roleRepository.save(Role.builder().name("STUDENT").build());
-            roleRepository.save(Role.builder().name("TEACHER").build());
+            roleRepository.save(Role.builder().name("INSTRUCTOR").build());
 
-            System.out.println("-----> ĐÃ KHỞI TẠO 3 ROLE: ADMIN, STUDENT, TEACHER <-----");
+            System.out.println("-----> ĐÃ KHỞI TẠO 3 ROLE: ADMIN, STUDENT, INSTRUCTOR <-----");
         }
 
         // 2. KHOI TAO ADMIN USER (Để bạn test API tạo user của admin)
         if (userRepository.count() == 0) {
             Role adminRole = roleRepository.findByName("ADMIN").orElse(null);
             Role studentRole = roleRepository.findByName("STUDENT").orElse(null);
-            Role teacherRole = roleRepository.findByName("TEACHER").orElse(null);
+            Role instructorRole = roleRepository.findByName("INSTRUCTOR").orElse(null);
 
             User admin = User.builder()
                     .email("admin@gmail.com")
@@ -53,19 +53,19 @@ public class DataSeeder implements CommandLineRunner {
                     .roles(Set.of(studentRole))
                     .build();
             
-            User teacher = User.builder()
-                    .email("teacher@gmail.com")
+            User instructor = User.builder()
+                    .email("instructor@gmail.com")
                     .password(passwordEncoder.encode("123456"))
-                    .fullName("Teacher")
+                    .fullName("Instructor")
                     .status(UserStatus.ACTIVE)
-                    .roles(Set.of(teacherRole))
+                    .roles(Set.of(instructorRole))
                     .build();
 
-            userRepository.saveAll(List.of(admin, student, teacher));
-            System.out.println("-----> ĐÃ TẠO USER ADMIN, STUDENT, TEACHER MẪU: \n" +
+            userRepository.saveAll(List.of(admin, student, instructor));
+            System.out.println("-----> ĐÃ TẠO USER ADMIN, STUDENT, INSTRUCTOR MẪU: \n" +
                     "admin@gmail.com / 123456 \n" +
                     "student@gmail.com / 123456 \n" +
-                    "teacher@gmail.com / 123456 <-----");
+                    "instructor@gmail.com / 123456 <-----");
         }
     }
 }

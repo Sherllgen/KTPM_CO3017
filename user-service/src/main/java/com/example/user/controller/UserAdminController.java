@@ -25,7 +25,7 @@ public class UserAdminController {
     // --- CREATE USER (Admin tạo) ---
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Tạo tài khoản mới (Admin)", description = "Admin tạo user mới và cấp quyền cụ thể (TEACHER, ADMIN...)")
+    @Operation(summary = "Tạo tài khoản mới (Admin)", description = "Admin tạo user mới và cấp quyền cụ thể (INSTRUCTOR, ADMIN...)")
     public ResponseEntity<ApiResponse<UserDto>> createUserAccount(@RequestBody @Valid UserCreateRequest request) {
         UserDto userDto = userAccountService.createUserAccount(request);
         return ResponseEntity.ok(new ApiResponse<>(200, "Admin tạo User thành công", userDto));

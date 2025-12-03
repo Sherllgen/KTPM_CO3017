@@ -3,6 +3,7 @@ package com.example.user.service.impl;
 import com.example.user.dto.request.UserCreateRequest;
 import com.example.user.dto.request.UserRegisterRequest;
 import com.example.user.dto.response.UserDto;
+import com.example.user.dto.response.UserValidationDto;
 import com.example.user.exception.AppException;
 import com.example.user.exception.ErrorCode;
 import com.example.user.mapper.UserMapper;
@@ -22,7 +23,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import java.util.HashSet;
 import java.util.Set;
@@ -151,8 +151,8 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UserDto> getUsers(String role, UserStatus status, Integer page, Integer size, String sortBy, String sortDir) {
-
+    public Page<UserDto> getUsers(String role, UserStatus status, Integer page, Integer size, String sortBy,
+            String sortDir) {
 
         String sortField = (sortBy == null || sortBy.isBlank()) ? "userId" : sortBy.trim();
         Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -162,8 +162,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         PageRequest pageable = PageRequest.of(pageIndex, pageSize, Sort.by(direction, sortField));
 
         Specification<User> spec = UserSpecifications.hasRole(role)
-                        .and(UserSpecifications.hasStatus(status));
-        
+                .and(UserSpecifications.hasStatus(status));
+
         return userRepository.findAll(spec, pageable).map(userMapper::toDto);
     }
 
@@ -186,5 +186,25 @@ public class UserAccountServiceImpl implements UserAccountService {
         user.setRoles(roles);
         userRepository.save(user);
         return userMapper.toDto(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserValidationDto validateInstructor(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        boolean isInstructor = user.getRoles().stream()
+                .anyMatch(role -> "INSTRUCTOR".equals(role.getName()));
+
+        boolean isActive = user.getStatus() == UserStatus.ACTIVE;
+
+        return UserValidationDto.builder()
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .isInstructor(isInstructor)
+                .isActive(isActive)
+                .build();
     }
 }
