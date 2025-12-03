@@ -22,16 +22,16 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // 1. KHOI TAO ROLE (Nếu bảng role trống)
+        // 1. INITIALIZE ROLE (If role table is empty)
         if (roleRepository.count() == 0) {
             roleRepository.save(Role.builder().name("ADMIN").build());
             roleRepository.save(Role.builder().name("STUDENT").build());
             roleRepository.save(Role.builder().name("INSTRUCTOR").build());
 
-            System.out.println("-----> ĐÃ KHỞI TẠO 3 ROLE: ADMIN, STUDENT, INSTRUCTOR <-----");
+            System.out.println("-----> INITIALIZED 3 ROLES: ADMIN, STUDENT, INSTRUCTOR <-----");
         }
 
-        // 2. KHOI TAO ADMIN USER (Để bạn test API tạo user của admin)
+        // 2. INITIALIZE ADMIN USER (For testing admin user creation API)
         if (userRepository.count() == 0) {
             Role adminRole = roleRepository.findByName("ADMIN").orElse(null);
             Role studentRole = roleRepository.findByName("STUDENT").orElse(null);
@@ -44,7 +44,7 @@ public class DataSeeder implements CommandLineRunner {
                     .status(UserStatus.ACTIVE)
                     .roles(Set.of(adminRole))
                     .build();
-            
+
             User student = User.builder()
                     .email("student@gmail.com")
                     .password(passwordEncoder.encode("123456"))
@@ -52,7 +52,7 @@ public class DataSeeder implements CommandLineRunner {
                     .status(UserStatus.ACTIVE)
                     .roles(Set.of(studentRole))
                     .build();
-            
+
             User instructor = User.builder()
                     .email("instructor@gmail.com")
                     .password(passwordEncoder.encode("123456"))
@@ -62,7 +62,7 @@ public class DataSeeder implements CommandLineRunner {
                     .build();
 
             userRepository.saveAll(List.of(admin, student, instructor));
-            System.out.println("-----> ĐÃ TẠO USER ADMIN, STUDENT, INSTRUCTOR MẪU: \n" +
+            System.out.println("-----> CREATED SAMPLE USERS ADMIN, STUDENT, INSTRUCTOR: \n" +
                     "admin@gmail.com / 123456 \n" +
                     "student@gmail.com / 123456 \n" +
                     "instructor@gmail.com / 123456 <-----");

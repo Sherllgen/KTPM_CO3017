@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    // Xử lý AppException
+    // Handle AppException
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<Object>> handleAppException(AppException ex) {
         ErrorCode errorCode = ex.getErrorCode();
@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(errorCode.getStatus().value()).body(response);
     }
 
-    // Xử lý Validation lỗi (Bean Validation @Valid)
+    // Handle Validation Error (Bean Validation @Valid)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Object>> handleValidationException(MethodArgumentNotValidException ex) {
         String errorMessage = ex.getBindingResult().getFieldErrors().stream()
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-    // Xử lý lỗi ngoài dự kiến
+    // Handle unexpected error
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleException(Exception ex) {
         log.error("Unexpected error", ex);

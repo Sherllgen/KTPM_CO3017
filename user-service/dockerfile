@@ -2,23 +2,29 @@
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copy parent POM
+# 1. Copy all POM files first
+# Maven needs to understand the parent-child structure
 COPY pom.xml .
-
-# Copy tất cả pom.xml của các module (để Maven không báo lỗi khi parse parent POM)
 COPY discovery-service/pom.xml ./discovery-service/
 COPY api-gateway/pom.xml ./api-gateway/
 COPY user-service/pom.xml ./user-service/
 COPY subject-service/pom.xml ./subject-service/
 
-# Download dependencies (chỉ parent, không build)
-RUN mvn dependency:go-offline -B -N
+# 2. Download dependencies with cache mount
+# Cache mount keeps .m2 directory even if pom.xml changes
+# This layer is cached and only rebuilds when POMs change
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:go-offline -B -pl user-service -am
 
-# Copy source code của module cần build
+# 3. Copy source code (separate layer for better caching)
+# When only source changes, layers above stay cached
 COPY user-service/src ./user-service/src
 
-# Build chỉ module user-service (bỏ -am để không build dependencies)
-RUN mvn clean package -DskipTests -pl user-service
+# 4. Build with cache mount
+# -am: also make dependencies
+# No 'clean' needed (Docker container is already clean)
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn package -DskipTests -pl user-service -am
 
 # Stage 2: Run
 FROM eclipse-temurin:17-jre-alpine

@@ -10,23 +10,24 @@ import com.example.user.model.enums.UserStatus;
 import java.util.Set;
 
 public interface UserAccountService {
-    // 1. Hàm cho người dùng tự đăng ký (Input: UserRegisterRequest)
+    // 1. Function for user self-registration (Input: UserRegisterRequest)
     UserDto register(UserRegisterRequest req);
 
-    // 2. Hàm cho Admin tạo user (Input: UserCreateRequest - Có chọn role)
+    // 2. Function for Admin to create user (Input: UserCreateRequest - With role
+    // selection)
     UserDto createUserAccount(UserCreateRequest req);
 
-    // 3. Hàm khóa/mở khóa tài khoản
+    // 3. Function to lock/unlock account
     void toggleUserStatus(Long userId);
 
     void verifyAccount(String email, String code);
 
     void deleteUser(Long id);
 
-    // 4. Lấy danh sách user (có phân trang, lọc theo role, status)
+    // 4. Get user list (with pagination, filter by role, status)
     Page<UserDto> getUsers(String role, UserStatus status, Integer page, Integer size, String sortBy, String sortDir);
 
-    // 5. Cập nhật role cho user
+    // 5. Update role for user
     UserDto updateUserRoles(Long userId, Set<String> roleNames);
 
     // 6. Validate instructor for inter-service communication

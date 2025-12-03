@@ -8,20 +8,20 @@ import lombok.Data;
 
 @Data
 public class UserRegisterRequest {
-    @NotBlank(message = "Email không được để trống")
-    @Email(message = "Email không hợp lệ")
+    @NotBlank(message = "Email must not be blank")
+    @Email(message = "Email is invalid")
     private String email;
 
-    @NotBlank(message = "Mật khẩu không được để trống")
+    @NotBlank(message = "Password must not be blank")
     private String password;
 
-    @NotBlank(message = "Họ tên không được để trống")
+    @NotBlank(message = "Full name must not be blank")
     private String fullName;
 
-    @NotBlank(message = "Số điện thoại không được để trống")
+    @NotBlank(message = "Phone number must not be blank")
     private String phone;
 
-    @Min(value = 1, message = "Tuổi phải lớn hơn 0")
-    @Max(value = 150, message = "Tuổi phải nhỏ hơn 150")
+    @Min(value = 1, message = "Age must be greater than 0")
+    @Max(value = 150, message = "Age must be less than 150")
     private Integer age;
 }
