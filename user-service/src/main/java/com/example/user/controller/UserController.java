@@ -2,11 +2,7 @@ package com.example.user.controller;
 
 import com.example.user.config.ApiResponse;
 import com.example.user.dto.request.UserProfileUpdateRequest;
-import com.example.user.dto.request.UserResetPasswordRequest;
-import com.example.user.dto.request.UserUpdatePasswordRequest;
 import com.example.user.dto.response.UserDto;
-import com.example.user.service.UserAccountService;
-import com.example.user.service.UserPasswordService;
 import com.example.user.service.UserProfileService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 
 import com.example.user.config.jwt.SecurityUtil;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,8 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "User Profile Management", description = "Các API Quản lý thông tin người dùng")
 public class UserController {
     private final UserProfileService userProfileService;
-    private final UserAccountService userAccountService;
-    private final UserPasswordService userPasswordService;
 
     // --- GET USER PROFILE ---
     @GetMapping("/me")

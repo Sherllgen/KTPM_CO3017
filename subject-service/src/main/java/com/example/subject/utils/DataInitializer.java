@@ -6,22 +6,21 @@ import com.example.subject.model.Subject;
 import com.example.subject.model.Topic;
 import com.example.subject.model.enums.SubjectStatus;
 import com.example.subject.repository.SubjectRepository;
-import com.example.subject.repository.TopicRepository;
+//import com.example.subject.repository.TopicRepository;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
 @Component
+@RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
     private final SubjectRepository subjectRepository;
-    private final TopicRepository topicRepository;
-
-    public DataInitializer(SubjectRepository subjectRepository, TopicRepository topicRepository) {
-        this.subjectRepository = subjectRepository;
-        this.topicRepository = topicRepository;
-    }
+    //private final TopicRepository topicRepository;
 
     @Override
     @Transactional
