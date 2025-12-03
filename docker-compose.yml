@@ -1,0 +1,187 @@
+services:
+  # Discovery Service - Phải khởi động đầu tiên
+  discovery-service:
+    build:
+      context: ./discovery-service
+      dockerfile: dockerfile
+    container_name: discovery-service
+    ports:
+      - "8761:8761"
+    networks:
+      - microservices-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # PostgreSQL cho User Service
+  postgres-user:
+    image: postgres:16-alpine
+    container_name: postgres-user
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: user_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-user-data:/var/lib/postgresql/data
+    networks:
+      - user-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # PostgreSQL cho Subject Service
+  postgres-subject:
+    image: postgres:16-alpine
+    container_name: postgres-subject
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: subject_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-subject-data:/var/lib/postgresql/data
+    networks:
+      - subject-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # User Service
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: dockerfile
+    container_name: user-service
+    env_file:
+      - ./user-service/.env
+    environment:
+      DB_HOST: postgres-user
+      SPRING_PROFILES_ACTIVE: prod
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      DB_NAME: user_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_PORT: 5432
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Server Configuration
+      USER_SERVICE_PORT: 8081
+      # JWT Configuration
+      JWT_SECRET: c2VjcmV0S2V5Rm9ySldUU2lnbmluZ1B1cnBvc2VzQXRMZWFzdDMyQ2hhcmFjdGVyc
+      JWT_ACCESS_EXPIRATION: 3600000
+      JWT_REFRESH_EXPIRATION: 86400000
+    ports:
+      - "8081:8081"
+    depends_on:
+      discovery-service:
+        condition: service_started
+      postgres-user:
+        condition: service_healthy
+    networks:
+      - microservices-network
+      - user-network
+    restart: unless-stopped
+
+  # Subject Service
+  subject-service:
+    build:
+      context: ./subject-service
+      dockerfile: dockerfile
+    container_name: subject-service
+    env_file:
+      - ./subject-service/.env
+    environment:
+      # Database Configuration
+      DB_HOST: postgres-subject
+      DB_NAME: subject_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_PORT: 5432
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Server Configuration
+      SUBJECT_SERVICE_PORT: 8082
+      SPRING_PROFILES_ACTIVE: prod
+
+      # Eureka Configuration
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-service:8761/eureka/
+
+      # JWT Configuration
+      JWT_SECRET: c2VjcmV0S2V5Rm9ySldUU2lnbmluZ1B1cnBvc2VzQXRMZWFzdDMyQ2hhcmFjdGVyc
+      JWT_ACCESS_EXPIRATION: 3600000
+      JWT_REFRESH_EXPIRATION: 86400000
+    ports:
+      - "8082:8082"
+    depends_on:
+      discovery-service:
+        condition: service_started
+      postgres-subject:
+        condition: service_healthy
+    networks:
+      - microservices-network
+      - subject-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8082/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  # API Gateway - Khởi động cuối cùng
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: dockerfile
+    container_name: api-gateway
+    env_file:
+      - ./api-gateway/.env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      JWT_SECRET: c2VjcmV0S2V5Rm9ySldUU2lnbmluZ1B1cnBvc2VzQXRMZWFzdDMyQ2hhcmFjdGVyc
+      JWT_ACCESS_EXPIRATION: 3600000
+      JWT_REFRESH_EXPIRATION: 86400000
+    ports:
+      - "8080:8080"
+    depends_on:
+      discovery-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+      subject-service:
+        condition: service_started
+    networks:
+      - microservices-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+networks:
+  microservices-network:
+    driver: bridge
+  user-network:
+    driver: bridge
+  subject-network:
+    driver: bridge
+
+volumes:
+  postgres-user-data:
+    driver: local
+  postgres-subject-data:
+    driver: local
