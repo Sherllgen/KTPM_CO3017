@@ -28,14 +28,14 @@
                   "raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"Password123\",\n    \"fullName\": \"Test User\"\n}"
                 },
                 "url": {
-                  "raw": "http://localhost:8080/users/register",
+                  "raw": "http://localhost:8080/auth/register",
                   "protocol": "http",
                   "host": [
                     "localhost"
                   ],
                   "port": "8080",
                   "path": [
-                    "users",
+                    "auth",
                     "register"
                   ]
                 },
@@ -77,14 +77,14 @@
                   "raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"Password123\"\n}"
                 },
                 "url": {
-                  "raw": "http://localhost:8080/users/login",
+                  "raw": "http://localhost:8080/auth/login",
                   "protocol": "http",
                   "host": [
                     "localhost"
                   ],
                   "port": "8080",
                   "path": [
-                    "users",
+                    "auth",
                     "login"
                   ]
                 },
@@ -142,14 +142,14 @@
                 "method": "POST",
                 "header": [],
                 "url": {
-                  "raw": "http://localhost:8080/users/logout",
+                  "raw": "http://localhost:8080/auth/logout",
                   "protocol": "http",
                   "host": [
                     "localhost"
                   ],
                   "port": "8080",
                   "path": [
-                    "users",
+                    "auth",
                     "logout"
                   ]
                 },
