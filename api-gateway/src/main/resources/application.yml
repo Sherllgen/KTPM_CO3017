@@ -17,7 +17,7 @@ spring:
         - id: user-public
           uri: lb://user-service
           predicates:
-            - Path=/users/register,/users/login,/users/refresh,/users/logout
+            - Path=/auth/**
         
         - id: user-admin
           uri: lb://user-service
