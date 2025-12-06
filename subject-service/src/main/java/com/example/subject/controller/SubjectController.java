@@ -64,7 +64,7 @@ public class SubjectController {
     }
 
     @GetMapping("/{subjectId}/topics")
-    @PreAuthorize("hasAnyRole('ADMIN', 'INSTRUCTOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT', 'INSTRUCTOR', 'SYSTEM')")
     @Operation(summary = "Get topics for a subject", description = "Retrieves topics associated with a specific subject.")
     public ResponseEntity<ApiResponse<java.util.List<TopicDto>>> getTopicsForSubject(
             @PathVariable Long subjectId) {

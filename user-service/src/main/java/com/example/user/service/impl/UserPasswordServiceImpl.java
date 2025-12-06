@@ -62,7 +62,6 @@ public class UserPasswordServiceImpl implements UserPasswordService {
         user.setVerificationCode(otp);
         userRepository.save(user);
 
-        // TODO: Send email with OTP
          emailService.sendPasswordResetOtp(email, otp);
         log.info("Password reset OTP sent to email: {}, OTP: {}", email, otp);
     }
