@@ -1,5 +1,7 @@
 package com.example.subject.mapper.impl;
 
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
 
 import com.example.subject.dto.request.SubjectCreateRequest;
@@ -9,22 +11,28 @@ import com.example.subject.mapper.SubjectMapper;
 import com.example.subject.model.Subject;
 import com.example.subject.model.enums.SubjectStatus;
 
+import com.example.subject.dto.response.SubjectInstructorDto;
+
 @Component
 public class SubjectMapperImpl implements SubjectMapper {
-    
+
     @Override
     public SubjectDto toDto(Subject subject) {
         if (subject == null) {
             return null;
         }
         return new SubjectDto(
-            subject.getSubjectId(),
-            subject.getCode(),
-            subject.getName(),
-            subject.getDescription(),
-            subject.getLevel(),
-            subject.getStatus() != null ? subject.getStatus().name() : null
-        );
+                subject.getSubjectId(),
+                subject.getCode(),
+                subject.getName(),
+                subject.getDescription(),
+                subject.getLevel(),
+                subject.getStatus() != null ? subject.getStatus().name() : null,
+                subject.getSubjectInstructorAssignments().stream()
+                        .map(assignment -> new SubjectInstructorDto(
+                                assignment.getInstructorId(),
+                                assignment.getInstructorName()))
+                        .collect(Collectors.toSet()));
     }
 
     @Override
@@ -32,14 +40,14 @@ public class SubjectMapperImpl implements SubjectMapper {
         if (request == null) {
             return null;
         }
-        
+
         Subject subject = new Subject();
         subject.setName(request.name());
         subject.setDescription(request.description());
         subject.setCode(request.code());
         subject.setLevel(request.level());
         subject.setStatus(SubjectStatus.DRAFT); // Default status for new subjects
-        
+
         return subject;
     }
 
@@ -56,5 +64,5 @@ public class SubjectMapperImpl implements SubjectMapper {
             subject.setStatus(request.status());
         }
     }
-    
+
 }

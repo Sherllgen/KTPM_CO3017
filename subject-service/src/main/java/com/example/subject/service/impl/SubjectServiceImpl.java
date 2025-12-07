@@ -167,6 +167,7 @@ public class SubjectServiceImpl implements SubjectService {
         SubjectInstructorAssignment assignment = SubjectInstructorAssignment.builder()
                 .subject(subject)
                 .instructorId(instructorId)
+                .instructorName(userValidation.getFullName())
                 .build();
 
         SubjectInstructorAssignment savedAssignment = assignmentRepository.save(assignment);
@@ -201,5 +202,12 @@ public class SubjectServiceImpl implements SubjectService {
         assignmentRepository.delete(assignment);
 
         log.info("Successfully removed instructor {} from subject {}", instructorId, subjectId);
+    }
+
+    @Override
+    @Transactional
+    public void removeInstructorFromAllSubjects(Long instructorId) {
+        log.info("Removing instructor {} from all subjects", instructorId);
+        assignmentRepository.deleteByInstructorId(instructorId);
     }
 }
