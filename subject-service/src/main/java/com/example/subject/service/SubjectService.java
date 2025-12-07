@@ -21,4 +21,6 @@ public interface SubjectService {
     InstructorAssignmentDto assignInstructor(Long subjectId, Long instructorId);
 
     void removeInstructor(Long subjectId, Long instructorId);
+
+    void removeInstructorFromAllSubjects(Long instructorId);
 }

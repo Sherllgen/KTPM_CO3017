@@ -26,4 +26,6 @@ public class SubjectInstructorAssignment {
     private Subject subject;
 
     private Long instructorId; // User Id of instructor
+
+    private String instructorName; // Name of instructor
 }

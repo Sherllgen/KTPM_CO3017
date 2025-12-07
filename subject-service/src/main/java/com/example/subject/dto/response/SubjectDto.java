@@ -1,11 +1,13 @@
 package com.example.subject.dto.response;
 
+import java.util.Set;
+
 public record SubjectDto(
-    Long id,
-    String code,
-    String name,
-    String description,
-    String level,
-    String status
-) {
-} 
+                Long id,
+                String code,
+                String name,
+                String description,
+                String level,
+                String status,
+                Set<SubjectInstructorDto> instructors) {
+}

@@ -13,4 +13,6 @@ public interface SubjectInstructorAssignmentRepository extends JpaRepository<Sub
     boolean existsBySubjectSubjectIdAndInstructorId(Long subjectId, Long instructorId);
 
     Optional<SubjectInstructorAssignment> findBySubjectSubjectIdAndInstructorId(Long subjectId, Long instructorId);
+
+    void deleteByInstructorId(Long instructorId);
 }

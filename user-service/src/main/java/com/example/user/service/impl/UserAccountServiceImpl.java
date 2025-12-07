@@ -11,11 +11,14 @@ import com.example.user.model.Role;
 import com.example.user.model.User;
 import com.example.user.model.enums.UserStatus;
 import com.example.user.repository.RoleRepository;
+import com.example.user.repository.SessionRepository;
 import com.example.user.repository.UserRepository;
 import com.example.user.repository.UserSpecifications;
 import com.example.user.service.EmailService;
+import com.example.user.client.SubjectClient;
 import com.example.user.service.UserAccountService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,9 +32,12 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserAccountServiceImpl implements UserAccountService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final SessionRepository sessionRepository;
+    private final SubjectClient subjectClient;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final UserMapper userMapper;
@@ -146,6 +152,25 @@ public class UserAccountServiceImpl implements UserAccountService {
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // Delete from subject-service if user is instructor
+        boolean isInstructor = user.getRoles().stream()
+                .anyMatch(role -> "INSTRUCTOR".equals(role.getName()));
+
+        if (isInstructor) {
+            try {
+                subjectClient.removeInstructorFromAllSubjects(id);
+            } catch (Exception e) {
+                log.error("Failed to remove instructor {} from subject service: {}", id, e.getMessage());
+                // Decide if we should continue or throw exception.
+                // Since this is cleanup, logging log might be enough, but to ensure consistency
+                // better to fail?
+                // For now, let's log and continue to avoid blocking user deletion if subject
+                // service is down.
+            }
+        }
+
+        sessionRepository.deleteByUser(user);
         userRepository.delete(user);
     }
 
