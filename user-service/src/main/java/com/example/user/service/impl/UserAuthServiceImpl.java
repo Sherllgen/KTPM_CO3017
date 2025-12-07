@@ -24,90 +24,93 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserAuthServiceImpl implements UserAuthService {
-    private final UserRepository userRepository;
-    private final SessionRepository sessionRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+        private final UserRepository userRepository;
+        private final SessionRepository sessionRepository;
+        private final JwtTokenProvider jwtTokenProvider;
 
-    // --- 1. LOGIN ---
-    @Override
-    @Transactional
-    public AuthTokenDto login(UserLoginRequest req) {
-        // ... (Đoạn xác thực authenticateManager giữ nguyên) ...
+        // --- 1. LOGIN ---
+        @Override
+        @Transactional
+        public AuthTokenDto login(UserLoginRequest req) {
 
-        User user = userRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                User user = userRepository.findByEmail(req.getEmail())
+                                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        // TẠO TOKEN
-        Set<String> roles = user.getRoles().stream()
-                .map(com.example.user.model.Role::getName)
-                .collect(Collectors.toSet());
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getEmail(), roles);
-        String refreshToken = UUID.randomUUID().toString();
+                if (user.getStatus() == com.example.user.model.enums.UserStatus.INACTIVE) {
+                        throw new AppException(ErrorCode.ACCOUNT_NOT_ACTIVE);
+                }
 
-        // XỬ LÝ SESSION (Sửa đoạn này)
-        // Tìm xem user này đã có session chưa?
-        Session session = sessionRepository.findByUser(user)
-                .orElseGet(() -> Session.builder().user(user).build()); // Nếu chưa có thì tạo vỏ mới
+                // TẠO TOKEN
+                Set<String> roles = user.getRoles().stream()
+                                .map(com.example.user.model.Role::getName)
+                                .collect(Collectors.toSet());
+                String accessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getEmail(), roles);
+                String refreshToken = UUID.randomUUID().toString();
 
-        // Cập nhật thông tin (Dù mới hay cũ đều set lại token và ngày hết hạn)
-        session.setToken(refreshToken);
-        session.setExpiryDate(Instant.now().plus(7, ChronoUnit.DAYS));
+                // XỬ LÝ SESSION (Sửa đoạn này)
+                // Tìm xem user này đã có session chưa?
+                Session session = sessionRepository.findByUser(user)
+                                .orElseGet(() -> Session.builder().user(user).build()); // Nếu chưa có thì tạo vỏ mới
 
-        sessionRepository.save(session);
+                // Cập nhật thông tin (Dù mới hay cũ đều set lại token và ngày hết hạn)
+                session.setToken(refreshToken);
+                session.setExpiryDate(Instant.now().plus(7, ChronoUnit.DAYS));
 
-        return new AuthTokenDto(accessToken, refreshToken);
-    }
+                sessionRepository.save(session);
 
-    // --- 2. LOGOUT ---
-    @Override
-    @Transactional
-    public void logout(String refreshToken) {
-        // Tìm session và xóa nó đi
-        sessionRepository.findByToken(refreshToken)
-                .ifPresent(session -> sessionRepository.delete(session));
-    }
-
-    // --- 3. AUTHENTICATE SESSION (REFRESH TOKEN) ---
-    @Override
-    @Transactional
-    public SessionDto authenticateSession(String refreshToken) {
-        // 1. Tìm session theo token cũ
-        Session session = sessionRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED, "Session không tồn tại"));
-
-        // 2. Kiểm tra hết hạn
-        if (session.getExpiryDate().isBefore(Instant.now())) {
-            sessionRepository.delete(session);
-            throw new AppException(ErrorCode.UNAUTHORIZED, "Session đã hết hạn, vui lòng login lại");
+                return new AuthTokenDto(accessToken, refreshToken);
         }
 
-        User user = session.getUser();
+        // --- 2. LOGOUT ---
+        @Override
+        @Transactional
+        public void logout(String refreshToken) {
+                // Tìm session và xóa nó đi
+                sessionRepository.findByToken(refreshToken)
+                                .ifPresent(session -> sessionRepository.delete(session));
+        }
 
-        // 3. TOKEN ROTATION (Sửa lại đoạn này)
-        // Thay vì xóa cũ tạo mới, ta cập nhật trực tiếp
-        Set<String> roles = user.getRoles().stream()
-                .map(com.example.user.model.Role::getName)
-                .collect(Collectors.toSet());
-        String newAccessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getEmail(), roles);
-        String newRefreshToken = UUID.randomUUID().toString();
+        // --- 3. AUTHENTICATE SESSION (REFRESH TOKEN) ---
+        @Override
+        @Transactional
+        public SessionDto authenticateSession(String refreshToken) {
+                // 1. Tìm session theo token cũ
+                Session session = sessionRepository.findByToken(refreshToken)
+                                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED, "Session không tồn tại"));
 
-        // Cập nhật thông tin mới vào session cũ
-        session.setToken(newRefreshToken);
-        session.setExpiryDate(Instant.now().plus(7, ChronoUnit.DAYS));
+                // 2. Kiểm tra hết hạn
+                if (session.getExpiryDate().isBefore(Instant.now())) {
+                        sessionRepository.delete(session);
+                        throw new AppException(ErrorCode.UNAUTHORIZED, "Session đã hết hạn, vui lòng login lại");
+                }
 
-        // Lưu lại (Hibernate sẽ tự hiểu là UPDATE vì session đã có ID)
-        sessionRepository.save(session);
+                User user = session.getUser();
 
-        return new SessionDto(newAccessToken, newRefreshToken);
-    }
+                // 3. TOKEN ROTATION (Sửa lại đoạn này)
+                // Thay vì xóa cũ tạo mới, ta cập nhật trực tiếp
+                Set<String> roles = user.getRoles().stream()
+                                .map(com.example.user.model.Role::getName)
+                                .collect(Collectors.toSet());
+                String newAccessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getEmail(), roles);
+                String newRefreshToken = UUID.randomUUID().toString();
 
-    // // Hàm phụ trợ để lưu session cho gọn code
-    // private void saveSession(User user, String refreshToken) {
-    // Session session = Session.builder()
-    // .user(user)
-    // .token(refreshToken)
-    // .expiryDate(Instant.now().plus(7, ChronoUnit.DAYS))
-    // .build();
-    // sessionRepository.save(session);
-    // }
+                // Cập nhật thông tin mới vào session cũ
+                session.setToken(newRefreshToken);
+                session.setExpiryDate(Instant.now().plus(7, ChronoUnit.DAYS));
+
+                // Lưu lại (Hibernate sẽ tự hiểu là UPDATE vì session đã có ID)
+                sessionRepository.save(session);
+
+                return new SessionDto(newAccessToken, newRefreshToken);
+        }
+
+        // // Hàm phụ trợ để lưu session cho gọn code
+        // private void saveSession(User user, String refreshToken) {
+        // Session session = Session.builder()
+        // .user(user)
+        // .token(refreshToken)
+        // .expiryDate(Instant.now().plus(7, ChronoUnit.DAYS))
+        // .build();
+        // sessionRepository.save(session);
+        // }
 }
