@@ -32,4 +32,6 @@ public interface UserAccountService {
 
     // 6. Validate instructor for inter-service communication
     UserValidationDto validateInstructor(Long userId);
+
+    void resendVerificationCode(String email);
 }

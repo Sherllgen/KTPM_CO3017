@@ -104,11 +104,19 @@ public class AuthController {
         }
         throw new RuntimeException("Refresh Token not found in Cookie");
     }
+
     @PostMapping("/verify")
     @Operation(summary = "Xác thực email", description = "Nhập email và mã code 6 số nhận được để kích hoạt tài khoản")
     public ResponseEntity<ApiResponse<Void>> verifyAccount(@RequestParam String email, @RequestParam String code) {
         userAccountService.verifyAccount(email, code);
         return ResponseEntity.ok(new ApiResponse<>(200, "Kích hoạt tài khoản thành công! Bạn có thể đăng nhập.", null));
+    }
+
+    @PostMapping("/verify/resend")
+    @Operation(summary = "Gửi lại mã xác thực", description = "Gửi lại mã xác thực cho tài khoản chưa kích hoạt")
+    public ResponseEntity<ApiResponse<Void>> resendVerification(@RequestParam String email) {
+        userAccountService.resendVerificationCode(email);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Mã xác thực mới đã được gửi", null));
     }
 
     @PutMapping("/me/password")

@@ -232,4 +232,21 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .isActive(isActive)
                 .build();
     }
+
+    @Override
+    @Transactional
+    public void resendVerificationCode(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getStatus() == UserStatus.ACTIVE) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Tài khoản đã được kích hoạt rồi");
+        }
+
+        String code = String.valueOf((int) ((Math.random() * 899999) + 100000));
+        user.setVerificationCode(code);
+        userRepository.save(user);
+
+        emailService.sendVerificationEmail(email, "Xác thực tài khoản", code);
+    }
 }
