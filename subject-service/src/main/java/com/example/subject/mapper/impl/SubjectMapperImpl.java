@@ -28,11 +28,13 @@ public class SubjectMapperImpl implements SubjectMapper {
                 subject.getDescription(),
                 subject.getLevel(),
                 subject.getStatus() != null ? subject.getStatus().name() : null,
-                subject.getSubjectInstructorAssignments().stream()
-                        .map(assignment -> new SubjectInstructorDto(
-                                assignment.getInstructorId(),
-                                assignment.getInstructorName()))
-                        .collect(Collectors.toSet()));
+                subject.getSubjectInstructorAssignments() != null
+                        ? subject.getSubjectInstructorAssignments().stream()
+                                .map(assignment -> new SubjectInstructorDto(
+                                        assignment.getInstructorId(),
+                                        assignment.getInstructorName()))
+                                .collect(Collectors.toSet())
+                        : java.util.Collections.emptySet());
     }
 
     @Override
